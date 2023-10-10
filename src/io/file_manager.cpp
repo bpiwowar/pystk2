@@ -176,8 +176,9 @@ FileManager::FileManager()
     }
     if(exe_path.size()==0 || exe_path[exe_path.size()-1]!='/')
         exe_path += "/";
-    if ( getenv ( "SUPERTUXKART_DATADIR" ) != NULL )
+    if ( getenv ( "SUPERTUXKART_DATADIR" ) != NULL ) {
         root_dir = std::string(getenv("SUPERTUXKART_DATADIR"))+"/data/" ;
+    }
 #ifdef __APPLE__
     else if( macSetBundlePathIfRelevant( root_dir ) ) { root_dir = root_dir + "data/"; }
 #endif
@@ -384,6 +385,7 @@ void FileManager::discoverPaths()
         }
         for(unsigned int j=ASSET_MIN; j<=ASSET_MAX; j++)
         {
+            Log::debug("[FileManager]", "Looking at '%s'", (m_root_dirs[i]+m_subdir_name[j]).c_str());
             if(!dir_found[j] && fileExists(m_root_dirs[i]+m_subdir_name[j]))
             {
                 dir_found[j] = true;

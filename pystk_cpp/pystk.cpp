@@ -83,7 +83,7 @@
 #include "utils/crash_reporting.hpp"
 #include "utils/leak_check.hpp"
 #include "utils/log.hpp"
-#include "utils/mini_glm.hpp"
+// #include "utils/mini_glm.hpp"
 #include "utils/profiler.hpp"
 #include "utils/string_utils.hpp"
 #include "objecttype.hpp"
@@ -189,19 +189,20 @@ void PySTKRenderTarget::render(irr::scene::ICameraSceneNode* camera, float dt) {
     rt_->renderToTexture(camera, dt);
 }
 void PySTKRenderTarget::fetch(std::shared_ptr<PySTKRenderData> data) {
-    RTT * rtts = rt_->getRTTs();
-    if (rtts && data) {
-        unsigned int W = rtts->getWidth(), H = rtts->getHeight();
-        // Read the color and depth image
-        data->color_buf_ = color_buf_[buf_num_];
-        data->depth_buf_ = depth_buf_[buf_num_];
-        data->instance_buf_ = instance_buf_[buf_num_];
+    // FIXME: put back?
+    // RTT * rtts = rt_->getRTTs();
+    // if (rtts && data) {
+    //     unsigned int W = rtts->getWidth(), H = rtts->getHeight();
+    //     // Read the color and depth image
+    //     data->color_buf_ = color_buf_[buf_num_];
+    //     data->depth_buf_ = depth_buf_[buf_num_];
+    //     data->instance_buf_ = instance_buf_[buf_num_];
         
-        data->depth_buf_->read(rtts->getDepthStencilTexture());
-        data->color_buf_->read(rtts->getRenderTarget(RTT_COLOR));
-        data->instance_buf_->read(rtts->getRenderTarget(RTT_LABEL));
-        buf_num_ = (buf_num_+1) % BUF_SIZE;
-    }
+    //     data->depth_buf_->read(rtts->getDepthStencilTexture());
+    //     data->color_buf_->read(rtts->getRenderTarget(RTT_COLOR));
+    //     data->instance_buf_->read(rtts->getRenderTarget(RTT_LABEL));
+    //     buf_num_ = (buf_num_+1) % BUF_SIZE;
+    // }
     
 }
 #endif  // SERVER_ONLY
@@ -291,7 +292,7 @@ PySTKRace::PySTKRace(const PySTKRaceConfig & config) {
     setupConfig(config);
 #ifndef SERVER_ONLY
     if (graphics_config_.render)
-        for(int i=0; i<config.players.size(); i++)
+        for(unsigned long int i=0; i<config.players.size(); i++)
             render_targets_.push_back( std::make_unique<PySTKRenderTarget>(irr_driver->createRenderTarget( {(unsigned int)UserConfigParams::m_width, (unsigned int)UserConfigParams::m_height}, "player"+std::to_string(i))) );
 #endif  // SERVER_ONLY
 }
@@ -321,8 +322,8 @@ public:
     { ai_controller_->reset(); }
     virtual void  update             (int ticks)
     { ai_controller_->update(ticks); }
-    virtual void  handleZipper       ()
-    { ai_controller_->handleZipper(); }
+    virtual void  handleZipper       (bool play_sound)
+    { ai_controller_->handleZipper(play_sound); }
     virtual void  collectedItem      (const ItemState &item,
                                       float previous_energy=0)
     { ai_controller_->collectedItem(item, previous_energy); }
@@ -359,6 +360,14 @@ public:
     /** Called whan this controller's kart finishes the last lap. */
     virtual void  finishedRace(float time)
     { return ai_controller_->finishedRace(time); }
+
+    virtual bool  saveState(BareNetworkString *buffer) const {
+        // FIXME: do something?
+    }
+    virtual void  rewindTo(BareNetworkString *buffer) {
+        // FIXME: do something?
+    }
+
 };
 void PySTKRace::restart() {
     World::getWorld()->reset(true /* restart */);
@@ -367,8 +376,9 @@ void PySTKRace::restart() {
 }
 
 void PySTKRace::start() {
+    auto race_manager = RaceManager::get();
     race_manager->setupPlayerKartInfo();
-    race_manager->startNew();
+    race_manager->startNew(false);
     time_leftover_ = 0.f;
     
     for(int i=0; i<config_.players.size(); i++) {
@@ -385,7 +395,7 @@ void PySTKRace::stop() {
 #endif  // SERVER_ONLY
     if (World::getWorld())
     {
-        race_manager->exitRace();
+        RaceManager::get()->exitRace();
     }
 }
 void PySTKRace::render(float dt) {
@@ -442,10 +452,10 @@ bool PySTKRace::step() {
     if (graphics_config_.render) {
         World::getWorld()->updateGraphics(dt);
 
-        irr_driver->minimalUpdate(dt);
+        irr_driver->update(dt);
         render(dt);
     } else {
-        World::getWorld()->updateGraphicsMinimal(dt);
+        World::getWorld()->updateGraphics(dt);
     }
 
     if (graphics_config_.render && !irr_driver->getDevice()->run())
@@ -453,6 +463,7 @@ bool PySTKRace::step() {
 #ifdef RENDERDOC
     if(rdoc_api) rdoc_api->EndFrameCapture(NULL, NULL);
 #endif
+    auto race_manager = RaceManager::get();
     return race_manager && race_manager->getFinishedPlayers() < race_manager->getNumPlayers();
 }
 
@@ -465,7 +476,7 @@ void PySTKRace::load() {
     // Reading the rest of the player data needs the unlock manager to
     // initialise the game slots of all players and the AchievementsManager
     // to initialise the AchievementsStatus, so it is done only now.
-    projectile_manager->loadData();
+    ProjectileManager::get()->loadData();
 
     // Both item_manager and powerup_manager load models and therefore
     // textures from the model directory. To avoid reading the
@@ -504,6 +515,7 @@ static RaceManager::MinorRaceModeType translate_mode(PySTKRaceConfig::RaceMode m
 void PySTKRace::setupConfig(const PySTKRaceConfig & config) {
     config_ = config;
     
+    auto race_manager = RaceManager::get();
     race_manager->setDifficulty(RaceManager::Difficulty(config.difficulty));
     race_manager->setMinorMode(translate_mode(config.mode));
     race_manager->setNumPlayers(config.players.size());
@@ -529,7 +541,6 @@ void PySTKRace::setupConfig(const PySTKRaceConfig & config) {
 void PySTKRace::initGraphicsConfig(const PySTKGraphicsConfig & config) {
     UserConfigParams::m_width  = config.screen_width;
     UserConfigParams::m_height = config.screen_height;
-    UserConfigParams::m_display_adapter = config.display_adapter;
     UserConfigParams::m_glow = config.glow;
     UserConfigParams::m_bloom = config.bloom;
     UserConfigParams::m_light_shaft = config.light_shaft;
@@ -551,7 +562,9 @@ void PySTKRace::initGraphicsConfig(const PySTKGraphicsConfig & config) {
  */
 void PySTKRace::initUserConfig(const std::string & data_dir)
 {
-    file_manager = new FileManager(data_dir);
+    setenv("SUPERTUXKART_DATADIR", data_dir.c_str(), true);
+    std::cerr << "Using data directory" << data_dir << std::endl;
+    file_manager = new FileManager();
     // Some parts of the file manager needs user config (paths for models
     // depend on artist debug flag). So init the rest of the file manager
     // after reading the user config file.
@@ -586,7 +599,7 @@ void PySTKRace::initRest()
     material_manager        = new MaterialManager      ();
     track_manager           = new TrackManager         ();
     kart_properties_manager = new KartPropertiesManager();
-    projectile_manager      = new ProjectileManager    ();
+    ProjectileManager::create();
     powerup_manager         = new PowerupManager       ();
     attachment_manager      = new AttachmentManager    ();
 
@@ -607,7 +620,8 @@ void PySTKRace::initRest()
 
     track_manager->loadTrackList();
 
-    race_manager            = new RaceManager          ();
+    RaceManager::create();
+    auto race_manager = RaceManager::get();
     // default settings for Quickstart
     race_manager->setNumPlayers(1);
     race_manager->setNumLaps   (3);
@@ -626,15 +640,15 @@ void PySTKRace::cleanSuperTuxKart()
 {
     // Stop music (this request will go into the sfx manager queue, so it needs
     // to be done before stopping the thread).
-    if(race_manager)            delete race_manager;
-    race_manager = nullptr;
+    RaceManager::destroy();
     if(attachment_manager)      delete attachment_manager;
     attachment_manager = nullptr;
     ItemManager::removeTextures();
     if(powerup_manager)         delete powerup_manager;
     powerup_manager = nullptr;
-    if(projectile_manager)      delete projectile_manager;
-    projectile_manager = nullptr;
+
+    ProjectileManager::destroy();
+
     if(kart_properties_manager) delete kart_properties_manager;
     kart_properties_manager = nullptr;
     if(track_manager)           delete track_manager;
@@ -643,11 +657,11 @@ void PySTKRace::cleanSuperTuxKart()
     material_manager = nullptr;
     
     Referee::cleanup();
-    ParticleKindManager::destroy();
+    ParticleKindManager::get()->cleanup();
     if(font_manager)            delete font_manager;
     font_manager = nullptr;
     
-    StkTime::destroy();
+    // StkTime::destroy();
 
     // Now finish shutting down objects which a separate thread. The
     // RequestManager has been signaled to shut down as early as possible,

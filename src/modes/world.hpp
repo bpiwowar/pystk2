@@ -136,9 +136,10 @@ protected:
 
     void  updateHighscores  (int* best_highscore_rank);
     void  resetAllKarts     ();
+public:
     Controller*
           loadAIController  (AbstractKart *kart);
-
+protected:
     virtual std::shared_ptr<AbstractKart> createKart
         (const std::string &kart_ident, int index, int local_player_id,
         int global_player_id, RaceManager::KartType type,

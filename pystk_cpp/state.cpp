@@ -23,6 +23,8 @@
 #include "modes/three_strikes_battle.hpp"
 #include "tracks/drive_graph.hpp"
 #include "tracks/drive_node.hpp"
+#include "tracks/check_goal.hpp"
+#include "tracks/check_manager.hpp"
 #include "tracks/track.hpp"
 #include "utils/vec3.hpp"
 #include "view.hpp"
@@ -305,7 +307,7 @@ struct PyKart {
 };
 
 struct PyItem {
-	int id = 0;
+	unsigned int id = 0;
 	PyVec3 location = {0,0,0};
 	float size = 1.1f/* sqrt(1.2) */;
 	enum Type
@@ -346,7 +348,7 @@ struct PyItem {
 	}
 	void update(const Item * i) {
 		if (i) {
-			id = i->getObjectId();
+			id = i->getItemId();
 			location = P(i->getXYZ());
 			size = i->getAvoidancePoint(0) ? (i->getXYZ() - *i->getAvoidancePoint(0)).length() : 1.1;
 			type = (Type)(int)i->getType();
@@ -373,7 +375,8 @@ struct PySoccerBall {
 	}
 	void update(const SoccerWorld * w) {
 		if (w) {
-			id = w->ballID();
+			// id = w->ballID();
+			id = w->getBallNode();
 			location = P(w->getBallPosition());
 			size = w->getBallDiameter();
 		}
@@ -399,13 +402,14 @@ struct PySoccer {
 	}
 	void update(const SoccerWorld * w) {
 		if (w) {
+			auto check_manager = Track::getCurrentTrack()->getCheckManager();
 			score = {w->getScore((KartTeam)0), w->getScore((KartTeam)1)};
 			ball.update(w);
-            unsigned int n = CheckManager::get()->getCheckStructureCount();
+            unsigned int n = check_manager->getCheckStructureCount();
             for (unsigned int i = 0; i < n; i++)
             {
                 CheckGoal* goal = dynamic_cast<CheckGoal*>
-                    (CheckManager::get()->getCheckStructure(i));
+                    (check_manager->getCheckStructure(i));
                 if (goal)
                     goal_line[(int)goal->getTeam()] = {P(goal->getPoint(CheckGoal::POINT_FIRST)), P(goal->getPoint(CheckGoal::POINT_LAST))};
             }
@@ -563,7 +567,6 @@ struct PyWorldState {
 #undef R
 		 .def("update", &PyWorldState::update, "Update this object with the current world state")
 		 .def("__repr__", [](const PyWorldState &k) { return "<WorldState #karts="+std::to_string(k.karts.size())+">"; })
-		 .def_static("set_ball_location", &PyWorldState::set_ball_location, py::arg("position"), py::arg("velocity")=PyVec3{0,0,0}, py::arg("angular_velocity")=PyVec3{0,0,0}, "Specify the soccer ball / hockey puck position (SOCCER mode only).")
 		 .def_static("set_kart_location", &PyWorldState::set_kart_location, py::arg("kart_id"), py::arg("position"), py::arg("rotation")=PyQuaternion{0,0,0,1}, py::arg("speed")=0, "Move a kart to a specific location.");
 		// TODO: Add pickling and make sure players are updated
 		add_pickle(c);
@@ -622,7 +625,8 @@ struct PyWorldState {
 				ffa->update(fw);
 			}
 		}
-		ItemManager * im = ItemManager::get();
+
+		ItemManager * im = Track::getCurrentTrack()->getItemManager(); //ItemManager::get();
 		if (im) {
 			items.clear();
 			for(int i=0; i<im->getNumberOfItems(); i++) {
@@ -630,13 +634,6 @@ struct PyWorldState {
 				if (PyItem::isValid(I))
 					items.push_back(std::make_shared<PyItem>(I));
 			}
-		}
-	}
-	static void set_ball_location(const PyVec3 & position, const PyVec3 & velocity, const PyVec3 & angular_velocity) {
-		World * w = World::getWorld();
-		SoccerWorld * sw = dynamic_cast<SoccerWorld*>(World::getWorld());
-		if (sw) {
-			sw->setBallPosition(P(position), P(velocity), P(angular_velocity));
 		}
 	}
 	static void set_kart_location(int id, const PyVec3 & position, const PyQuaternion & rotation, float speed) {

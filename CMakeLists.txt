@@ -4,6 +4,19 @@ cmake_minimum_required(VERSION 2.8.4)
 project(SuperTuxKart)
 set(PROJECT_VERSION "1.4")
 
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+option (FORCE_COLORED_OUTPUT "Always produce ANSI-colored output (GNU/Clang only)." TRUE)
+if (${FORCE_COLORED_OUTPUT})
+    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+       add_compile_options (-fdiagnostics-color=always)
+    elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+       add_compile_options (-fcolor-diagnostics)
+    endif ()
+endif ()
+
 add_definitions( -DSUPERTUXKART_VERSION="${PROJECT_VERSION}" )
 
 if(NOT (CMAKE_MAJOR_VERSION VERSION_LESS 3))
@@ -559,15 +572,11 @@ include(sources.cmake)
 include(cmake/SourceGroupFunctions.cmake)
 source_group_hierarchy(STK_SOURCES STK_HEADERS)
 
-# Replaces executable by a library
-if (FALSE)
-    if(APPLE)
-        add_library(supertuxkart ${STK_SOURCES} ${STK_RESOURCES} ${STK_HEADERS})
-    else()
-        add_library(supertuxkart ${STK_SOURCES} ${STK_RESOURCES} ${STK_HEADERS})
-    endif()
+# [PySTK] Replaces executable by a library
+if (TRUE)
+    add_library(supertuxkart ${STK_SOURCES} ${STK_RESOURCES} ${STK_HEADERS})
 else()
-# [start] This is skipped...
+# [PySTK] [start] This is skipped...
 if(APPLE AND NOT IOS)
     # icon files to copy in the bundle
     set(OSX_ICON_FILES ${PROJECT_SOURCE_DIR}/data/supertuxkart.icns)
@@ -640,7 +649,8 @@ else()
         target_link_libraries(supertuxkart ${PTHREAD_LIBRARY})
     endif()
 endif()
-endif() # prevents building executable
+endif() # [PySTK] [end] prevents building executable
+
 
 # check if linking against libatomic is required
 include(CheckCXXSourceCompiles)
@@ -929,11 +939,11 @@ if(MINGW)
 endif()
 
 # Build python bindings
-pybind11_add_module(pystk pystk_cpp/binding.cpp pystk_cpp/buffer.cpp pystk_cpp/pystk.cpp pystk_cpp/util.cpp pystk_cpp/state.cpp pystk_cpp/pickle.cpp)
+pybind11_add_module(pystk pystk_cpp/binding.cpp pystk_cpp/buffer.cpp pystk_cpp/pystk.cpp pystk_cpp/objecttype.cpp pystk_cpp/util.cpp pystk_cpp/state.cpp pystk_cpp/pickle.cpp)
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_compile_definitions(pystk PUBLIC RENDERDOC)
 endif()
-target_link_libraries(pystk PRIVATE pybind11::module stk)
+target_link_libraries(pystk PRIVATE pybind11::module supertuxkart)
 set_target_properties(pystk PROPERTIES PREFIX "${PYTHON_MODULE_PREFIX}" SUFFIX "${PYTHON_MODULE_EXTENSION}")
 add_custom_command(TARGET pystk POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:pystk> ${PROJECT_SOURCE_DIR}/ )
 
