@@ -24,7 +24,7 @@ using namespace pybind11::literals;
 PYBIND11_MAKE_OPAQUE(std::vector<PySTKPlayerConfig>);
 
 void path_and_init(const PySTKGraphicsConfig & config) {
-    auto pystk_data = py::module::import("pystk_data"), os = py::module::import("os");
+    auto pystk_data = py::module::import("pystk2_data"), os = py::module::import("os");
     PySTKRace::init(config, py::cast<std::string>(py::str(pystk_data.attr("data_dir"))));
 }
 PYBIND11_MODULE(pystk, m) {
