@@ -8,6 +8,9 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
+# Allows to skip some parts of the original code
+ADD_DEFINITIONS(-DPYSTK_BUILD)
+
 option (FORCE_COLORED_OUTPUT "Always produce ANSI-colored output (GNU/Clang only)." TRUE)
 if (${FORCE_COLORED_OUTPUT})
     if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
@@ -939,7 +942,7 @@ if(MINGW)
 endif()
 
 # Build python bindings
-pybind11_add_module(pystk pystk_cpp/binding.cpp pystk_cpp/buffer.cpp pystk_cpp/pystk.cpp pystk_cpp/objecttype.cpp pystk_cpp/util.cpp pystk_cpp/state.cpp pystk_cpp/pickle.cpp)
+pybind11_add_module(pystk pystk_cpp/binding.cpp pystk_cpp/buffer.cpp pystk_cpp/pystk.cpp pystk_cpp/simulation.cpp pystk_cpp/objecttype.cpp pystk_cpp/util.cpp pystk_cpp/state.cpp pystk_cpp/pickle.cpp)
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_compile_definitions(pystk PUBLIC RENDERDOC)
 endif()

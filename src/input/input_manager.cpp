@@ -1383,8 +1383,9 @@ void InputManager::setMode(InputDriverMode new_mode)
             Log::info("InputManager::setMode", "INGAME");
 #endif
             // We must be in menu mode now in order to switch.
+#ifndef PYSTK_BUILD
             assert (m_mode == MENU);
-
+#endif
             //if (m_action_map)
             //   delete m_action_map;
 

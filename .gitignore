@@ -92,3 +92,8 @@ lib/mbedtls
 lib/astc-encoder
 
 .DS_Store
+
+pystk_data/SuperTuxKart-*.tar.xz
+*.egg-info
+*.so
+pystk_data/dist/

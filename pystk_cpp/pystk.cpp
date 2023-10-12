@@ -44,7 +44,14 @@
 #include <IEventReceiver.h>
 
 #include "pystk.hpp"
+#include "main_loop.hpp"
+#include "achievements/achievements_manager.hpp"
+#include "audio/music_manager.hpp"
+#include "audio/sfx_manager.hpp"
+#include "challenges/unlock_manager.hpp"
+#include "challenges/story_mode_timer.hpp"
 #include "config/stk_config.hpp"
+#include "config/player_manager.hpp"
 #include "config/user_config.hpp"
 #include "font/font_manager.hpp"
 #include "graphics/camera.hpp"
@@ -61,6 +68,9 @@
 #include "graphics/sp/sp_shader.hpp"
 #include "graphics/sp/sp_texture_manager.hpp"
 #include "input/input.hpp"
+#include "input/keyboard_device.hpp"
+#include "input/input_manager.hpp"
+#include "input/device_manager.hpp"
 #include "io/file_manager.hpp"
 #include "items/attachment_manager.hpp"
 #include "items/item_manager.hpp"
@@ -73,6 +83,8 @@
 #include "karts/kart_properties.hpp"
 #include "karts/kart_properties_manager.hpp"
 #include "modes/world.hpp"
+#include "race/grand_prix_manager.hpp"
+#include "race/history.hpp"
 #include "race/race_manager.hpp"
 #include "scriptengine/property_animator.hpp"
 #include "tracks/arena_graph.hpp"
@@ -83,12 +95,13 @@
 #include "utils/crash_reporting.hpp"
 #include "utils/leak_check.hpp"
 #include "utils/log.hpp"
-// #include "utils/mini_glm.hpp"
 #include "utils/profiler.hpp"
 #include "utils/string_utils.hpp"
 #include "objecttype.hpp"
 #include "util.hpp"
 #include "buffer.hpp"
+#include "tips/tips_manager.hpp"
+#include "utils/translation.hpp"
 
 #ifdef RENDERDOC
 #include "renderdoc_app.h"
@@ -188,21 +201,24 @@ PySTKRenderTarget::PySTKRenderTarget(std::unique_ptr<RenderTarget>&& rt):rt_(std
 void PySTKRenderTarget::render(irr::scene::ICameraSceneNode* camera, float dt) {
     rt_->renderToTexture(camera, dt);
 }
+
 void PySTKRenderTarget::fetch(std::shared_ptr<PySTKRenderData> data) {
-    // FIXME: put back?
-    // RTT * rtts = rt_->getRTTs();
-    // if (rtts && data) {
-    //     unsigned int W = rtts->getWidth(), H = rtts->getHeight();
-    //     // Read the color and depth image
-    //     data->color_buf_ = color_buf_[buf_num_];
-    //     data->depth_buf_ = depth_buf_[buf_num_];
-    //     data->instance_buf_ = instance_buf_[buf_num_];
-        
-    //     data->depth_buf_->read(rtts->getDepthStencilTexture());
-    //     data->color_buf_->read(rtts->getRenderTarget(RTT_COLOR));
-    //     data->instance_buf_->read(rtts->getRenderTarget(RTT_LABEL));
-    //     buf_num_ = (buf_num_+1) % BUF_SIZE;
-    // }
+    // Fetch the image
+    if (const auto rt_gl3 = dynamic_cast<GL3RenderTarget*>(rt_.get())) {
+        RTT * rtts = rt_gl3->getRTTs();
+        if (rtts && data) {
+            unsigned int W = rtts->getWidth(), H = rtts->getHeight();
+            // Read the color and depth image
+            data->color_buf_ = color_buf_[buf_num_];
+            data->depth_buf_ = depth_buf_[buf_num_];
+            data->instance_buf_ = instance_buf_[buf_num_];
+            
+            data->depth_buf_->read(rtts->getDepthStencilTexture());
+            data->color_buf_->read(rtts->getRenderTarget(RTT_COLOR));
+            data->instance_buf_->read(rtts->getRenderTarget(RTT_LENS_128));
+            buf_num_ = (buf_num_+1) % BUF_SIZE;
+        }
+    }
     
 }
 #endif  // SERVER_ONLY
@@ -243,6 +259,7 @@ void PySTKRace::init(const PySTKGraphicsConfig & config, const std::string & dat
         initUserConfig(data_dir);
         stk_config->load(file_manager->getAsset("stk_config.xml"));
         initGraphicsConfig(config);
+        story_mode_timer = new StoryModeTimer();
         initRest();
         load();
     }
@@ -290,11 +307,7 @@ PySTKRace::PySTKRace(const PySTKRaceConfig & config) {
     resetObjectId();
     
     setupConfig(config);
-#ifndef SERVER_ONLY
-    if (graphics_config_.render)
-        for(unsigned long int i=0; i<config.players.size(); i++)
-            render_targets_.push_back( std::make_unique<PySTKRenderTarget>(irr_driver->createRenderTarget( {(unsigned int)UserConfigParams::m_width, (unsigned int)UserConfigParams::m_height}, "player"+std::to_string(i))) );
-#endif  // SERVER_ONLY
+
 }
 std::vector<std::string> PySTKRace::listTracks() {
     if (track_manager)
@@ -379,6 +392,23 @@ void PySTKRace::start() {
     auto race_manager = RaceManager::get();
     race_manager->setupPlayerKartInfo();
     race_manager->startNew(false);
+
+#ifndef SERVER_ONLY
+    if (graphics_config_.render) {
+
+        for(unsigned long int i=0; i<config_.players.size(); i++) {
+            auto render_target = irr_driver->createRenderTarget( {(unsigned int)UserConfigParams::m_width, (unsigned int)UserConfigParams::m_height}, "player"+std::to_string(i));
+            
+            // FIXME: Remove???
+            // for(unsigned int i = 0; i < Camera::getNumCameras() && i < render_targets_.size(); i++) {
+                Camera::getCamera(i)->activate(false);
+                render_target->renderToTexture(Camera::getCamera(i)->getCameraSceneNode(), 0.);
+            // }
+
+            render_targets_.push_back(std::make_unique<PySTKRenderTarget>(std::move(render_target)));
+        }
+    }
+#endif  // SERVER_ONLY
     time_leftover_ = 0.f;
     
     for(int i=0; i<config_.players.size(); i++) {
@@ -472,11 +502,23 @@ void PySTKRace::load() {
     material_manager->loadMaterial();
     // Preload the explosion effects (explode.png)
     ParticleKindManager::get()->getParticles("explosion.xml");
+    ParticleKindManager::get()->getParticles("explosion_bomb.xml");
+    ParticleKindManager::get()->getParticles("explosion_cake.xml");
+    ParticleKindManager::get()->getParticles("jump_explosion.xml");
+
+    // Creates the main loop
+    main_loop = new MainLoop(0 /* parent_pid */);
 
     // Reading the rest of the player data needs the unlock manager to
     // initialise the game slots of all players and the AchievementsManager
     // to initialise the AchievementsStatus, so it is done only now.
     ProjectileManager::get()->loadData();
+
+    // Needs the kart and track directories to load potential challenges
+    // in those dirs, so it can only be created after reading tracks
+    // and karts.
+    unlock_manager = new UnlockManager();
+    AchievementsManager::create();
 
     // Both item_manager and powerup_manager load models and therefore
     // textures from the model directory. To avoid reading the
@@ -514,7 +556,20 @@ static RaceManager::MinorRaceModeType translate_mode(PySTKRaceConfig::RaceMode m
 
 void PySTKRace::setupConfig(const PySTKRaceConfig & config) {
     config_ = config;
-    
+
+    // FIXME: hack, active player is first    
+    InputDevice *device;
+
+    // Use keyboard 0 by default in --no-start-screen
+    device = input_manager->getDeviceManager()->getKeyboard(0);
+
+    // Create player and associate player with keyboard
+    StateManager::get()->createActivePlayer(
+        PlayerManager::get()->getPlayer(0), device
+    );
+    PlayerManager::get()->getPlayer(0)->initRemainingData();
+
+
     auto race_manager = RaceManager::get();
     race_manager->setDifficulty(RaceManager::Difficulty(config.difficulty));
     race_manager->setMinorMode(translate_mode(config.mode));
@@ -536,6 +591,7 @@ void PySTKRace::setupConfig(const PySTKRaceConfig & config) {
     race_manager->setNumLaps(config.laps);
     race_manager->setNumKarts(config.num_kart);
     race_manager->setMaxGoal(1<<30);
+
 }
 
 void PySTKRace::initGraphicsConfig(const PySTKGraphicsConfig & config) {
@@ -563,13 +619,13 @@ void PySTKRace::initGraphicsConfig(const PySTKGraphicsConfig & config) {
 void PySTKRace::initUserConfig(const std::string & data_dir)
 {
     setenv("SUPERTUXKART_DATADIR", data_dir.c_str(), true);
-    std::cerr << "Using data directory" << data_dir << std::endl;
     file_manager = new FileManager();
     // Some parts of the file manager needs user config (paths for models
     // depend on artist debug flag). So init the rest of the file manager
     // after reading the user config file.
     file_manager->init();
 
+    translations            = new Translations();   // needs file_manager
     stk_config              = new STKConfig();      // in case of --stk-config
                                                     // command line parameters
 }   // initUserConfig
@@ -589,11 +645,29 @@ void PySTKRace::initRest()
 
     // Now create the actual non-null device in the irrlicht driver
     irr_driver->initDevice();
+    IrrlichtDevice* device = irr_driver->getDevice();
+    video::IVideoDriver* driver = device->getVideoDriver();
 
     font_manager = new FontManager();
+    input_manager = new InputManager();
+
+#ifndef SERVER_ONLY
+        TipsManager::create();
+#endif
+
+    GUIEngine::init(device, driver, StateManager::get());
+    // GUIEngine::renderLoading(true, true, false);
+    // GUIEngine::flushRenderLoading(true/*launching*/);
+
     font_manager->loadFonts();
     SP::loadShaders();
 
+    PlayerManager::create();
+
+    music_manager = new MusicManager();
+    history = new History();
+
+    SFXManager::create();
     // The order here can be important, e.g. KartPropertiesManager needs
     // defaultKartProperties, which are defined in stk_config.
     material_manager        = new MaterialManager      ();
@@ -619,6 +693,11 @@ void PySTKRace::initRest()
     }
 
     track_manager->loadTrackList();
+
+    grand_prix_manager      = new GrandPrixManager();
+    // Consistency check for challenges, and enable all challenges
+    // that have all prerequisites fulfilled
+    grand_prix_manager->checkConsistency();
 
     RaceManager::create();
     auto race_manager = RaceManager::get();
@@ -655,7 +734,14 @@ void PySTKRace::cleanSuperTuxKart()
     track_manager = nullptr;
     if(material_manager)        delete material_manager;
     material_manager = nullptr;
-    
+
+    if(history)                 delete history;
+    history = nullptr;
+
+    delete ParticleKindManager::get();
+    PlayerManager::destroy();
+    if(unlock_manager)          delete unlock_manager;
+
     Referee::cleanup();
     ParticleKindManager::get()->cleanup();
     if(font_manager)            delete font_manager;
@@ -682,6 +768,9 @@ void PySTKRace::cleanUserConfig()
 {
     if(stk_config)              delete stk_config;
     stk_config = nullptr;
+
+    if(translations)            delete translations;
+    translations = nullptr;
 
     if(irr_driver)              delete irr_driver;
     irr_driver = nullptr;

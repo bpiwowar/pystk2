@@ -9,6 +9,7 @@
 #include "pickle.hpp"
 #include "pystk.hpp"
 #include "state.hpp"
+#include "simulation.hpp"
 #include "view.hpp"
 #include "utils/constants.hpp"
 #include "objecttype.hpp"
@@ -50,6 +51,9 @@ PYBIND11_MODULE(pystk, m) {
     
     // Define the game state
     defineState(m);
+
+    auto m_simulation = m.def_submodule("simulation", "Module that can handle multiple races (no graphics)");
+    defineSimulation(m_simulation);
     
     {
         py::enum_<Log::LogLevel>(m, "LogLevel", "Global logging level")

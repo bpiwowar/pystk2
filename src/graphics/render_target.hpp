@@ -84,6 +84,7 @@ public:
     irr::core::dimension2du getTextureSize() const;
     void renderToTexture(irr::scene::ICameraSceneNode* camera, float dt);
     void setFrameBuffer(FrameBuffer* fb) { m_frame_buffer = fb; }
+    RTT* getRTTs() { return m_rtts; }
 
 };
 
