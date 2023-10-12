@@ -92,6 +92,13 @@ RaceManager* RaceManager::get()
 }   // get
 
 //---------------------------------------------------------------------------------------------
+void RaceManager::get(RaceManager* race_manager)
+{
+    ProcessType type = STKProcess::getType();
+    g_race_manager[type] = race_manager;
+}   // set
+
+//---------------------------------------------------------------------------------------------
 void RaceManager::create()
 {
     ProcessType type = STKProcess::getType();
