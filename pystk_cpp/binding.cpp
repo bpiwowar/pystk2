@@ -28,7 +28,7 @@ void path_and_init(const PySTKGraphicsConfig & config) {
     auto pystk_data = py::module::import("pystk2_data"), os = py::module::import("os");
     PySTKRace::init(config, py::cast<std::string>(py::str(pystk_data.attr("data_dir"))));
 }
-PYBIND11_MODULE(pystk, m) {
+PYBIND11_MODULE(pystk2, m) {
     m.doc() = "Python SuperTuxKart interface";
     m.attr("__version__") = std::string(STK_VERSION);
 #ifdef SERVER_ONLY

@@ -27,8 +27,8 @@ public:
 	~ConfigurationKeeper() {
 		// Put back old values
 
-		World::setWorld(world);
-		RaceManager::set(race_manager);
+		// World::setWorld(world);
+		// RaceManager::set(race_manager);
 	}
 };
 
@@ -41,30 +41,30 @@ struct PyRace {
 		
 		ConfigurationKeeper keeper;
 
-		World::setWorld(new World());
-		RaceManager::create();
+		// World::setWorld(new World());
+		// RaceManager::create();
 
-		auto race_manager = RaceManager::get();
-		race_manager->setDifficulty(RaceManager::Difficulty(config.difficulty));
-		race_manager->setMinorMode(translate_mode(config.mode));
-		race_manager->setNumPlayers(config.players.size());
-		for(int i=0; i<config.players.size(); i++) {
-			std::string kart = config.players[i].kart.size() ? config.players[i].kart : (std::string)UserConfigParams::m_default_kart;
-			const KartProperties *prop = kart_properties_manager->getKart(kart);
-			if (!prop)
-				kart = UserConfigParams::m_default_kart;
-			race_manager->setPlayerKart(i, kart);
-			race_manager->setKartTeam(i, (KartTeam)config.players[i].team);
-		}
-		race_manager->setReverseTrack(config.reverse);
-		if (config.track.length())
-			race_manager->setTrack(config.track);
-		else
-			race_manager->setTrack("lighthouse");
+		// auto race_manager = RaceManager::get();
+		// race_manager->setDifficulty(RaceManager::Difficulty(config.difficulty));
+		// race_manager->setMinorMode(translate_mode(config.mode));
+		// race_manager->setNumPlayers(config.players.size());
+		// for(int i=0; i<config.players.size(); i++) {
+		// 	std::string kart = config.players[i].kart.size() ? config.players[i].kart : (std::string)UserConfigParams::m_default_kart;
+		// 	const KartProperties *prop = kart_properties_manager->getKart(kart);
+		// 	if (!prop)
+		// 		kart = UserConfigParams::m_default_kart;
+		// 	race_manager->setPlayerKart(i, kart);
+		// 	race_manager->setKartTeam(i, (KartTeam)config.players[i].team);
+		// }
+		// race_manager->setReverseTrack(config.reverse);
+		// if (config.track.length())
+		// 	race_manager->setTrack(config.track);
+		// else
+		// 	race_manager->setTrack("lighthouse");
 		
-		race_manager->setNumLaps(config.laps);
-		race_manager->setNumKarts(config.num_kart);
-		race_manager->setMaxGoal(1<<30);
+		// race_manager->setNumLaps(config.laps);
+		// race_manager->setNumKarts(config.num_kart);
+		// race_manager->setMaxGoal(1<<30);
 	}
 
 	void test() {

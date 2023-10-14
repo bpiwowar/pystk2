@@ -215,6 +215,7 @@ endif()
 #set(RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/../../bin)
 
 #See https://cmake.org/cmake/help/latest/manual/cmake-packages.7.html#creating-packages for a detailed explanation about this part
+if (false) # skip for pystk2
 install(TARGETS ${ANGELSCRIPT_LIBRARY_NAME} EXPORT AngelscriptTargets
 	RUNTIME DESTINATION bin
 	LIBRARY DESTINATION lib
@@ -227,6 +228,7 @@ install(FILES
 	DESTINATION include
 	COMPONENT Devel
 )
+endif() # (skip for pystk2)
 
 include(CMakePackageConfigHelpers)
 write_basic_package_version_file(
@@ -235,16 +237,20 @@ write_basic_package_version_file(
 	COMPATIBILITY AnyNewerVersion
 )
 
+if (false) # skip for pystk2
 export(EXPORT AngelscriptTargets
 	FILE "${CMAKE_CURRENT_BINARY_DIR}/Angelscript/AngelscriptTargets.cmake"
 	NAMESPACE Angelscript::
 )
+endif() # (skip for pystk2)
+
 configure_file(cmake/AngelscriptConfig.cmake
 	"${CMAKE_CURRENT_BINARY_DIR}/Angelscript/AngelscriptConfig.cmake"
 	COPYONLY
 )
 
 set(ConfigPackageLocation lib/cmake/Angelscript)
+if (false) # skip for pystk2
 install(EXPORT AngelscriptTargets
 	FILE AngelscriptTargets.cmake
 	NAMESPACE Angelscript::
@@ -257,4 +263,4 @@ install(
 	DESTINATION ${ConfigPackageLocation}
 	COMPONENT Devel
 )
-
+endif() # skip for pystk2

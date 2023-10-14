@@ -5,7 +5,7 @@ from setuptools import setup, Command
 from setuptools.command.build_py import build_py
 import tarfile
 
-VERSION = "0.0.0"
+VERSION = "1.4"
 SUPERTUXKART_URL = f"https://github.com/supertuxkart/stk-code/releases/download/{VERSION}/SuperTuxKart-{VERSION}-src.tar.xz"
 this_directory = Path(__file__).absolute().parent
 assets_file = this_directory / f'SuperTuxKart-{VERSION}.tar.xz'
@@ -114,6 +114,6 @@ setup(
     install_requires=['requests'],
     python_requires='>=3.6',
     # add custom build_ext command
-    # cmdclass=dict(fetch_data=FetchDataCommand, build_py=BuildAndCopyData),
+    cmdclass=dict(fetch_data=FetchDataCommand, build_py=BuildAndCopyData),
     zip_safe=False,
 )

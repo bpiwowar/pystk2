@@ -920,6 +920,7 @@ endif()
 
 
 # ==== Install target ====
+if (FALSE) # skip this for PySTK (this is included in PySuperTuxKart2-Data package)
 install(TARGETS supertuxkart RUNTIME DESTINATION ${STK_INSTALL_BINARY_DIR} BUNDLE DESTINATION .)
 install(DIRECTORY ${STK_DATA_DIR} DESTINATION ${STK_INSTALL_DATA_DIR} PATTERN ".svn" EXCLUDE PATTERN ".git" EXCLUDE)
 if(STK_ASSETS_DIR AND CHECK_ASSETS)
@@ -940,17 +941,21 @@ if(MINGW)
     install(DIRECTORY ${CMAKE_BINARY_DIR}/bin/ DESTINATION ${STK_INSTALL_BINARY_DIR}
             FILES_MATCHING PATTERN "*.dll")
 endif()
+endif() # skipping installs for PySTK
 
 # Build python bindings
-pybind11_add_module(pystk pystk_cpp/binding.cpp pystk_cpp/buffer.cpp pystk_cpp/pystk.cpp pystk_cpp/simulation.cpp pystk_cpp/objecttype.cpp pystk_cpp/util.cpp pystk_cpp/state.cpp pystk_cpp/pickle.cpp)
+pybind11_add_module(pystk2 pystk_cpp/binding.cpp pystk_cpp/buffer.cpp pystk_cpp/pystk.cpp pystk_cpp/simulation.cpp pystk_cpp/objecttype.cpp pystk_cpp/util.cpp pystk_cpp/state.cpp pystk_cpp/pickle.cpp)
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    target_compile_definitions(pystk PUBLIC RENDERDOC)
+    target_compile_definitions(pystk2 PUBLIC RENDERDOC)
 endif()
-target_link_libraries(pystk PRIVATE pybind11::module supertuxkart)
-set_target_properties(pystk PROPERTIES PREFIX "${PYTHON_MODULE_PREFIX}" SUFFIX "${PYTHON_MODULE_EXTENSION}")
-add_custom_command(TARGET pystk POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:pystk> ${PROJECT_SOURCE_DIR}/ )
+target_link_libraries(pystk2 PRIVATE pybind11::module supertuxkart)
+set_target_properties(pystk2 PROPERTIES PREFIX "${PYTHON_MODULE_PREFIX}" SUFFIX "${PYTHON_MODULE_EXTENSION}")
+add_custom_command(TARGET pystk2 POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:pystk2> ${PROJECT_SOURCE_DIR}/ )
 
 
 if(APPLE)
-   target_link_libraries(pystk PRIVATE "-framework CoreFoundation -framework Cocoa")
+   target_link_libraries(pystk2 PRIVATE "-framework CoreFoundation -framework Cocoa")
 endif()
+
+# Install python bindings
+install(TARGETS pystk2 DESTINATION .)
