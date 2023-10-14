@@ -6,6 +6,7 @@ on:
   push:
     branches:
      - master
+     - pystk
   # release:
   #   types:
   #     - published
