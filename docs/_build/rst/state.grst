@@ -1,0 +1,131 @@
+
+.. py:class:: pystk.WorldState
+
+   .. py:method:: set_ball_location (position: float3, velocity: float3 = [0.0, 0.0, 0.0], angular_velocity: float3 = [0.0, 0.0, 0.0]) -> None
+      :staticmethod:
+
+      Specify the soccer ball / hockey puck position (SOCCER mode only).
+
+
+   .. py:method:: set_kart_location (kart_id: int, position: float3, rotation: Quaternion = [0.0, 0.0, 0.0, 1.0], speed: float = 0) -> None
+      :staticmethod:
+
+      Move a kart to a specific location.
+
+
+   .. py:method:: update (self: pystk.WorldState) -> None
+
+      Update this object with the current world state
+
+
+.. py:class:: pystk.Track
+
+   .. py:method:: update (self: pystk.Track) -> None
+
+.. py:class:: pystk.Player
+
+.. py:class:: pystk.Camera
+
+   .. py:class:: Mode
+
+      .. py:attribute:: CLOSEUP
+         :annotation: = 1
+
+      .. py:attribute:: FALLING
+         :annotation: = 4
+
+      .. py:attribute:: LEADER_MODE
+         :annotation: = 3
+
+      .. py:attribute:: NORMAL
+         :annotation: = 0
+
+      .. py:attribute:: REVERSE
+         :annotation: = 2
+
+.. py:class:: pystk.Item
+
+   .. py:class:: Type
+
+      .. py:attribute:: BANANA
+         :annotation: = 1
+
+      .. py:attribute:: BONUS_BOX
+         :annotation: = 0
+
+      .. py:attribute:: BUBBLEGUM
+         :annotation: = 4
+
+      .. py:attribute:: EASTER_EGG
+         :annotation: = 6
+
+      .. py:attribute:: NITRO_BIG
+         :annotation: = 2
+
+      .. py:attribute:: NITRO_SMALL
+         :annotation: = 3
+
+.. py:class:: pystk.Kart
+
+.. py:class:: pystk.Powerup
+
+   .. py:class:: Type
+
+      .. py:attribute:: ANVIL
+         :annotation: = 10
+
+      .. py:attribute:: BOWLING
+         :annotation: = 3
+
+      .. py:attribute:: BUBBLEGUM
+         :annotation: = 1
+
+      .. py:attribute:: CAKE
+         :annotation: = 2
+
+      .. py:attribute:: NOTHING
+         :annotation: = 0
+
+      .. py:attribute:: PARACHUTE
+         :annotation: = 9
+
+      .. py:attribute:: PLUNGER
+         :annotation: = 5
+
+      .. py:attribute:: RUBBERBALL
+         :annotation: = 8
+
+      .. py:attribute:: SWATTER
+         :annotation: = 7
+
+      .. py:attribute:: SWITCH
+         :annotation: = 6
+
+      .. py:attribute:: ZIPPER
+         :annotation: = 4
+
+.. py:class:: pystk.Attachment
+
+   .. py:class:: Type
+
+      .. py:attribute:: ANVIL
+         :annotation: = 1
+
+      .. py:attribute:: BOMB
+         :annotation: = 2
+
+      .. py:attribute:: BUBBLEGUM_SHIELD
+         :annotation: = 6
+
+      .. py:attribute:: NOTHING
+         :annotation: = 9
+
+      .. py:attribute:: PARACHUTE
+         :annotation: = 0
+
+      .. py:attribute:: SWATTER
+         :annotation: = 3
+
+.. py:class:: pystk.Soccer
+
+.. py:class:: pystk.SoccerBall
