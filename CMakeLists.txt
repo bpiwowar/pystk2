@@ -371,7 +371,7 @@ if (NOT SERVER_ONLY)
     # SDL2
     find_library(SDL2_LIBRARY NAMES SDL2 libSDL2)
     find_path(SDL2_INCLUDEDIR NAMES SDL.h PATH_SUFFIXES SDL2 include/SDL2 include PATHS)
-    if (NOT SDL2_LIBRARY OR NOT SDL2_INCLUDEDIR)
+    if (NOT SDL2_LIBRARY OR NOT SDL2_INCLUDEDIR)   
         message(FATAL_ERROR "SDL2 not found. "
             "SDL2 is required to handle gamepad in SuperTuxKart.")
     else()
