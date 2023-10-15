@@ -1,5 +1,0 @@
-
-.. py:function:: pystk.is_running () -> bool
-
-   Is a race running?
-
