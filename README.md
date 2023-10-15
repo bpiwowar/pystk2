@@ -1,9 +1,26 @@
-# SuperTuxKart
+# Python SuperTuxKart 2
+
+This is a modified version of the free SuperTuxKart racing game with Python bindings.
+A lot of code was borrowed from [PySTK](https://github.com/philkr/pystk), with some main differences:
+
+- The code is now quite close to SuperTuxKart (no code deletion) so that SuperTuxKart updates can be easily applied
+- The python building
+- (project) races can be run in parallel (for Reinforcement Learning experiments)
+
+The current source code is based on the SuperTuxKart 1.4 branch.
+
+## Licence
+
+As STK and PySTK, PySTK2 is released under the GNU General Public License (GPL) which can be found in the file [`COPYING`](/COPYING) in the same directory as this file.
+
+## SuperTuxKart
+<!-- 
 [![Linux build status](https://github.com/supertuxkart/stk-code/actions/workflows/linux.yml/badge.svg)](https://github.com/supertuxkart/stk-code/actions/workflows/linux.yml)
 [![Apple build status](https://github.com/supertuxkart/stk-code/actions/workflows/apple.yml/badge.svg)](https://github.com/supertuxkart/stk-code/actions/workflows/apple.yml)
 [![Windows build status](https://github.com/supertuxkart/stk-code/actions/workflows/windows.yml/badge.svg)](https://github.com/supertuxkart/stk-code/actions/workflows/windows.yml)
 [![Switch build status](https://github.com/supertuxkart/stk-code/actions/workflows/switch.yml/badge.svg)](https://github.com/supertuxkart/stk-code/actions/workflows/switch.yml)
-[![#supertuxkart on the libera IRC network](https://img.shields.io/badge/libera-%23supertuxkart-brightgreen.svg)](https://web.libera.chat/?channels=#supertuxkart)
+[![#supertuxkart on the libera IRC network](https://img.shields.io/badge/libera-%23supertuxkart-brightgreen.svg)](https://web.libera.chat/?channels=#supertuxkart) 
+-->
 
 SuperTuxKart is a free kart racing game. It focuses on fun and not on realistic kart physics. Instructions can be found on the in-game help page.
 
@@ -22,8 +39,10 @@ To run SuperTuxKart, make sure that your computer's specifications are equal or 
 * Ideally, you'll want a joystick with at least 6 buttons.
 
 ## License
+
 The software is released under the GNU General Public License (GPL) which can be found in the file [`COPYING`](/COPYING) in the same directory as this file.
 
+<!-- 
 ---
 
 ## 3D coordinates
@@ -33,7 +52,8 @@ SuperTuxKart: X right, Y up, Z forwards
 
 Blender: X right, Y forwards, Z up
 
-The export utilities  perform the needed transformation, so in Blender you just work with the XY plane as ground, and things will appear fine in STK (using XZ as ground in the code, obviously).
+The export utilities  perform the needed transformation, so in Blender you just work with the XY plane as ground, and things will appear fine in STK (using XZ as ground in the code, obviously). 
+-->
 
 ## Building from source
 
