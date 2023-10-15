@@ -58,16 +58,15 @@ jobs:
 
         # Download dependencies for manylinux (CentOS 7)
         CIBW_BEFORE_ALL_LINUX: |
-          yum install cmake ninja bluez-libs-devel openssl-devel png-devel libcurl-devel freetype-devel harfbuzz-devel openjpeg-devel libogg-devel libpng-devel libvorbis-devel 
+          yum install cmake bluez-libs-devel openssl-devel png-devel libcurl-devel freetype-devel harfbuzz-devel openjpeg-devel libogg-devel libpng-devel libvorbis-devel 
 
         # Download dependencies for MacOS
         CIBW_BEFORE_ALL_MACOS: |
-          curl  -L  "https://github.com/supertuxkart/dependencies/releases/download/1.4/dependencies-macosx.tar.xz"  | tar -xv
+          curl  -L  "https://github.com/supertuxkart/dependencies/releases/download/1.4/dependencies-macosx.tar.xz"  | tar -xv; export CMAKE_FIND_ROOT_PATH=$(pwd)/dependencies-macosx
         
         # Download dependencies for windows
         CIBW_BEFORE_ALL_WINDOWS: |
-          curl.exe -L -o index.html https://github.com/supertuxkart/dependencies/releases/download/1.4/dependencies-win-x86_64.zip
-          tar -xvf dependencies-win-x86_64.zip 
+          curl.exe -L -o index.html https://github.com/supertuxkart/dependencies/releases/download/1.4/dependencies-win-x86_64.zip; tar -xvf dependencies-win-x86_64.zip 
 
     - name: Verify clean directory
       run: git diff --exit-code
