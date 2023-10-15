@@ -62,7 +62,7 @@ jobs:
 
         # Download dependencies for MacOS
         CIBW_BEFORE_ALL_MACOS: |
-          curl  -L  "https://github.com/supertuxkart/dependencies/releases/download/1.4/dependencies-macosx.tar.xz"  | tar -xv; export CMAKE_FIND_ROOT_PATH=$(pwd)/dependencies-macosx
+          curl  -L  "https://github.com/supertuxkart/dependencies/releases/download/1.4/dependencies-macosx.tar.xz"  | tar -xv
         
         # Download dependencies for windows
         CIBW_BEFORE_ALL_WINDOWS: |

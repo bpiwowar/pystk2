@@ -35,6 +35,14 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "STKRelease")
 endif()
 
+# Add dependencies path
+if(APPLE AND NOT IOS)
+    if (EXISTS ${PROJECT_SOURCE_DIR}/dependencies-macosx)
+        message(STATUS "Addings ${PROJECT_SOURCE_DIR}/dependencies-macosx to CMAKE_FIND_ROOT_PATH")
+        SET(CMAKE_FIND_ROOT_PATH ${PROJECT_SOURCE_DIR}/dependencies-macosx)
+    endif()
+endif()
+
 CMAKE_DEPENDENT_OPTION(USE_SWITCH "Build targeting switch" OFF "NOT NINTENDO_SWITCH" ON)
 
 if(WIN32)
