@@ -58,16 +58,16 @@ jobs:
 
         # Download dependencies for Linux
         CIBW_BEFORE_ALL_LINUX: >
-          sudo apt-get install build-essential cmake libbluetooth-dev libsdl2-dev libcurl4-openssl-dev libenet-dev libfreetype6-dev libharfbuzz-dev libjpeg-dev libogg-dev libopenal-dev libpng-dev libssl-dev libvorbis-dev libmbedtls-dev pkg-config zlib1g-dev
+          apt-get install build-essential cmake libbluetooth-dev libsdl2-dev libcurl4-openssl-dev libenet-dev libfreetype6-dev libharfbuzz-dev libjpeg-dev libogg-dev libopenal-dev libpng-dev libssl-dev libvorbis-dev libmbedtls-dev pkg-config zlib1g-dev
 
         # Download dependencies for MacOS
         CIBW_BEFORE_ALL_MACOS: >
-          curl  -L  "https://github.com/supertuxkart/dependencies/releases/download/1.4/dependencies-macosx.tar.xz"  | tar -xv -C ..
+          curl  -L  "https://github.com/supertuxkart/dependencies/releases/download/1.4/dependencies-macosx.tar.xz"  | tar -xv
         
         # Download dependencies for windows
-        CIBW_BEFORE_ALL_WINDOWS: >
+        CIBW_BEFORE_ALL_WINDOWS:
           curl.exe -L -o index.html https://github.com/supertuxkart/dependencies/releases/download/1.4/dependencies-win-x86_64.zip
-          tar -xvf -C .. dependencies-win-x86_64.zip 
+          tar -xvf dependencies-win-x86_64.zip 
 
     - name: Verify clean directory
       run: git diff --exit-code

@@ -1,5 +1,7 @@
 # Python SuperTuxKart 2
 
+[![Documentation](https://readthedocs.org/projects/pystk2/badge/?version=latest)](http://pystk2.rtfd.io/)
+
 This is a modified version of the free SuperTuxKart racing game with Python bindings.
 A lot of code was borrowed from [PySTK](https://github.com/philkr/pystk), with some main differences:
 
