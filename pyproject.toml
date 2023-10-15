@@ -23,7 +23,3 @@ classifiers = [
 
 [tool.scikit-build]
 cmake.args = ["-DBUILD_RECORDER=0", "-DCHECK_ASSETS=off", "-DUSE_WIIUSE=off", "-DUSE_CRYPTO_OPENSSL=off", "-DUSE_SQLITE3=off"]
-
-[tool.cibuildwheel.linux]
-# Ubuntu: apt-get install -y cmake build-essential libogg-dev libvorbis-dev libopenal-dev libsdl2-dev libsdl2-image-dev libfreetype6-dev libraqm-dev libcurl4-openssl-dev libglew-dev libharfbuzz-dev libfribidi-dev libglm-dev zlib1g-dev
-before-all = "apt-get install build-essential cmake libbluetooth-dev libsdl2-dev libcurl4-openssl-dev libenet-dev libfreetype6-dev libharfbuzz-dev libjpeg-dev libogg-dev libopenal-dev libpng-dev libssl-dev libvorbis-dev libmbedtls-dev pkg-config zlib1g-dev"
