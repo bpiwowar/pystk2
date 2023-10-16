@@ -565,11 +565,17 @@ void PySTKRace::setupConfig(const PySTKRaceConfig & config) {
     // Use keyboard 0 by default in --no-start-screen
     device = input_manager->getDeviceManager()->getKeyboard(0);
 
+    auto player_manager = PlayerManager::get();
+    auto state_manager = StateManager::get();
+
     // Create player and associate player with keyboard
-    StateManager::get()->createActivePlayer(
-        PlayerManager::get()->getPlayer(0), device
-    );
-    PlayerManager::get()->getPlayer(0)->initRemainingData();
+    while (state_manager->activePlayerCount() < config.players.size()) {
+        auto profile = player_manager->addNewPlayer("pystk");
+        state_manager->createActivePlayer(
+            profile, device
+        );
+        profile->initRemainingData();
+    }
 
 
     auto race_manager = RaceManager::get();
@@ -620,7 +626,12 @@ void PySTKRace::initGraphicsConfig(const PySTKGraphicsConfig & config) {
  */
 void PySTKRace::initUserConfig(const std::string & data_dir)
 {
-    setenv("SUPERTUXKART_DATADIR", data_dir.c_str(), true);
+#ifdef WIN32
+    _putenv_s("SUPERTUXKART_DATADIR", data_dir.c_str());
+#else
+   setenv("SUPERTUXKART_DATADIR", data_dir.c_str(), true);
+#endif
+
     file_manager = new FileManager();
     // Some parts of the file manager needs user config (paths for models
     // depend on artist debug flag). So init the rest of the file manager
