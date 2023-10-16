@@ -6,8 +6,8 @@ This is a modified version of the free SuperTuxKart racing game with Python bind
 A lot of code was borrowed from [PySTK](https://github.com/philkr/pystk), with some main differences:
 
 - The code is now quite close to SuperTuxKart (no code deletion) so that SuperTuxKart updates can be easily applied
-- The python building
-- (project) races can be run in parallel (for Reinforcement Learning experiments)
+- The assets are now downloaded in a "cache" directory (no more data package)
+- (project) races can be run in parallel (e.g. for Reinforcement Learning experiments)
 
 The current source code is based on the SuperTuxKart 1.4 branch.
 
