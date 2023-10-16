@@ -33,6 +33,7 @@
 #  include <signal.h>
 #  include <unistd.h>
 #endif
+#include <stdlib.h>
 #include <stdexcept>
 #include <cstdio>
 #include <string>
