@@ -2,6 +2,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
+#include <pybind11/embed.h>
 #include <memory>
 #include <string>
 #include <sstream>
@@ -25,9 +26,73 @@ using namespace pybind11::literals;
 PYBIND11_MAKE_OPAQUE(std::vector<PySTKPlayerConfig>);
 
 void path_and_init(const PySTKGraphicsConfig & config) {
-    auto pystk_data = py::module::import("pystk2_data"), os = py::module::import("os");
-    PySTKRace::init(config, py::cast<std::string>(py::str(pystk_data.attr("data_dir"))));
+    // Download data if no
+
+    auto locals = py::dict();
+    {
+    py::exec(R"(
+from pathlib import Path
+import sys
+from tarfile import TarFile
+import requests
+from platformdirs import user_cache_dir
+
+cachedir = Path(user_cache_dir("PySuperTuxKart2", "bpiwowar"))
+
+cachedir.mkdir(parents=True, exist_ok=True)
+
+VERSION = "1.4"
+FILENAME = f"SuperTuxKart-{VERSION}-src.tar.xz"
+SUPERTUXKART_URL = f"https://github.com/supertuxkart/stk-code/releases/download/{VERSION}/{FILENAME}"
+
+ASSETS_DIR= cachedir / VERSION
+DOWNLOADED_FILE = ASSETS_DIR / "__downloaded__.txt"
+
+ASSETS_ARCHIVE = cachedir / FILENAME
+ASSETS_ARCHIVE_TMP  = cachedir / f"{FILENAME}.tmp"
+
+if not DOWNLOADED_FILE.is_file():
+    # Download archive        
+    if not ASSETS_ARCHIVE.is_file():
+        sys.stderr.write(f"Downloading {SUPERTUXKART_URL}\n")
+        with ASSETS_ARCHIVE_TMP.open('wb') as fp, requests.get(SUPERTUXKART_URL, stream=True, allow_redirects=True) as r:
+            total_length = r.headers.get('content-length')
+            if total_length is None:
+                fp.write(r.content)
+            else:
+                dl = 0
+                total_length = int(total_length)
+                for data in r.iter_content(1 << 20):
+                    dl += len(data)
+                    fp.write(data)
+                    done = int(50 * dl / total_length)
+                    # sys.stdout.write("\r[%s%s] %3d%%" % ('=' * done, ' ' * (50 - done), 100 * dl / total_length))
+
+        ASSETS_ARCHIVE_TMP.rename(ASSETS_ARCHIVE)
+    
+    # Decompress
+    sys.stderr.write(f"Extracting data from {ASSETS_ARCHIVE}\n")
+    ASSETS_DIR.mkdir(exist_ok=True)
+    with TarFile.open(ASSETS_ARCHIVE, "r:xz") as tf:
+        while tf_info := tf.next():
+            tf_path = Path(tf_info.name)
+            parents = list(tf_path.parents)
+            if len(parents) > 2 and parents[-3].name == "data":
+                tf_info.name = tf_path.relative_to(parents[-3])
+                tf.extract(tf_info, str(ASSETS_DIR / "data"))
+
+    sys.stderr.write("Cleaning up")
+    DOWNLOADED_FILE.write_text("done")
+    ASSETS_ARCHIVE.unlink()
+
+ASSETS_DIR = str(ASSETS_DIR)
+)", py::globals(), locals);
+    
+        auto pystk_data = locals["ASSETS_DIR"].cast<std::string>();
+        PySTKRace::init(config, pystk_data);
+    }
 }
+
 PYBIND11_MODULE(pystk2, m) {
     m.doc() = "Python SuperTuxKart interface";
     m.attr("__version__") = std::string(STK_VERSION);
@@ -204,7 +269,7 @@ PYBIND11_MODULE(pystk2, m) {
     m.def("list_karts", &PySTKRace::listKarts, "Return a list of karts to play as (possible values for PlayerConfig.kart");
     
     // Initialize SuperTuxKart
-    m.def("init", &path_and_init, py::arg("config"), "Initialize Python SuperTuxKart. Only call this function once per process. Calling it twice will cause a crash.");
+    m.def("init", &path_and_init, py::arg("config"), "Initialize Python SuperTuxKart - this will download the game assets if not already done. Only call this function once per process. Calling it twice will cause a crash.");
     m.def("clean", &PySTKRace::clean, "Free Python SuperTuxKart, call this once at exit (optional). Will be called atexit otherwise.");
     
     auto atexit = py::module::import("atexit");

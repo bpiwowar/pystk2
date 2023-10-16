@@ -20,6 +20,10 @@ classifiers = [
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
 ]
+dependencies = [
+  "platformdirs"
+]
+
 
 [tool.scikit-build]
 cmake.args = ["-DBUILD_RECORDER=0", "-DCHECK_ASSETS=off", "-DUSE_WIIUSE=off", "-DUSE_CRYPTO_OPENSSL=off", "-DUSE_SQLITE3=off"]

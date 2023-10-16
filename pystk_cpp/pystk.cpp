@@ -256,6 +256,7 @@ void PySTKRace::init(const PySTKGraphicsConfig & config, const std::string & dat
     } else {
         is_init = 1;
         graphics_config_ = config;
+        Log::info("pystk", "Using data directory %s", data_dir.c_str());
         initUserConfig(data_dir);
         stk_config->load(file_manager->getAsset("stk_config.xml"));
         initGraphicsConfig(config);
