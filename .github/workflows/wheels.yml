@@ -7,9 +7,9 @@ on:
     branches:
      - master
      - pystk
-  # release:
-  #   types:
-  #     - published
+  release:
+    types:
+      - published
 
 env:
   FORCE_COLOR: 3
