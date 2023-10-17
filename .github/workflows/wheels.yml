@@ -56,8 +56,8 @@ jobs:
         CIBW_ARCHS_MACOS: universal2
         CIBW_ARCHS_WINDOWS: AMD64
 
-        # Skip PyPy builds
-        CIBW_SKIP: pp*
+        # Skip PyPy and 32 bits builds
+        CIBW_SKIP: "pp* *-win32 *-manylinux_i686"
 
         # Download dependencies for manylinux (CentOS 7)
         CIBW_BEFORE_ALL_LINUX: |
