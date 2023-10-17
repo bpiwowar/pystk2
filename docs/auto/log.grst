@@ -1,5 +1,5 @@
 
-.. py:class:: pystk.LogLevel
+.. py:class:: pystk2.LogLevel
 
    Global logging level
 
@@ -22,7 +22,7 @@
    .. py:attribute:: warn
       :annotation: = 3
 
-.. py:function:: pystk.set_log_level (arg0: int) -> None
+.. py:function:: pystk2.set_log_level (arg0: int) -> None
 
    Set the global log level
 

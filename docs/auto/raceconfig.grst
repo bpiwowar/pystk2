@@ -1,5 +1,5 @@
 
-.. py:class:: pystk.RaceConfig
+.. py:class:: pystk2.RaceConfig
 
    SuperTuxKart race configuration.
 
@@ -27,12 +27,12 @@
       .. py:attribute:: TIME_TRIAL
          :annotation: = 1
 
-.. py:function:: pystk.list_tracks () -> List[str]
+.. py:function:: pystk2.list_tracks () -> List[str]
 
    Return a list of track names (possible values for RaceConfig.track)
 
 
-.. py:function:: pystk.list_karts () -> List[str]
+.. py:function:: pystk2.list_karts () -> List[str]
 
    Return a list of karts to play as (possible values for PlayerConfig.kart
 

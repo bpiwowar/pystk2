@@ -1,5 +1,5 @@
 
-.. py:class:: pystk.RenderData
+.. py:class:: pystk2.RenderData
 
    SuperTuxKart rendering output
 

@@ -1,17 +1,17 @@
 
-.. py:class:: pystk.Race
+.. py:class:: pystk2.Race
 
    The SuperTuxKart race instance
 
 
-   .. py:method:: __init__ (self: pystk.Race, config: pystk.RaceConfig)
+   .. py:method:: __init__ (self: pystk2.Race, config: pystk2.RaceConfig)
 
-   .. py:method:: restart (self: pystk.Race) -> None
+   .. py:method:: restart (self: pystk2.Race) -> None
 
       Restart the current track. Use this function if the race config does not change, instead of creating a new SuperTuxKart object
 
 
-   .. py:method:: start (self: pystk.Race) -> None
+   .. py:method:: start (self: pystk2.Race) -> None
 
       start the race
 
@@ -21,25 +21,25 @@
       Overloaded function.
 
 
-      * step(self: pystk.Race, action: List[pystk.Action]) -> bool
+      * step(self: pystk2.Race, action: List[pystk2.Action]) -> bool
 
 
       Take a step with an action per agent
 
 
-      * step(self: pystk.Race, action: pystk.Action) -> bool
+      * step(self: pystk2.Race, action: pystk2.Action) -> bool
 
 
       Take a step with an action for agent 0
 
 
-      * step(self: pystk.Race) -> bool
+      * step(self: pystk2.Race) -> bool
 
 
       Take a step without changing the action
 
 
-   .. py:method:: stop (self: pystk.Race) -> None
+   .. py:method:: stop (self: pystk2.Race) -> None
 
       Stop the race
 

@@ -1,5 +1,5 @@
 
-.. py:class:: pystk.ObjectType
+.. py:class:: pystk2.ObjectType
 
    .. py:attribute:: object_type_shift
 

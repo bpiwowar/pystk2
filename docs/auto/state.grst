@@ -1,11 +1,5 @@
 
-.. py:class:: pystk.WorldState
-
-   .. py:method:: set_ball_location (position: float3, velocity: float3 = [0.0, 0.0, 0.0], angular_velocity: float3 = [0.0, 0.0, 0.0]) -> None
-      :staticmethod:
-
-      Specify the soccer ball / hockey puck position (SOCCER mode only).
-
+.. py:class:: pystk2.WorldState
 
    .. py:method:: set_kart_location (kart_id: int, position: float3, rotation: Quaternion = [0.0, 0.0, 0.0, 1.0], speed: float = 0) -> None
       :staticmethod:
@@ -13,18 +7,18 @@
       Move a kart to a specific location.
 
 
-   .. py:method:: update (self: pystk.WorldState) -> None
+   .. py:method:: update (self: pystk2.WorldState) -> None
 
       Update this object with the current world state
 
 
-.. py:class:: pystk.Track
+.. py:class:: pystk2.Track
 
-   .. py:method:: update (self: pystk.Track) -> None
+   .. py:method:: update (self: pystk2.Track) -> None
 
-.. py:class:: pystk.Player
+.. py:class:: pystk2.Player
 
-.. py:class:: pystk.Camera
+.. py:class:: pystk2.Camera
 
    .. py:class:: Mode
 
@@ -32,7 +26,7 @@
          :annotation: = 1
 
       .. py:attribute:: FALLING
-         :annotation: = 4
+         :annotation: = 7
 
       .. py:attribute:: LEADER_MODE
          :annotation: = 3
@@ -43,7 +37,7 @@
       .. py:attribute:: REVERSE
          :annotation: = 2
 
-.. py:class:: pystk.Item
+.. py:class:: pystk2.Item
 
    .. py:class:: Type
 
@@ -65,9 +59,9 @@
       .. py:attribute:: NITRO_SMALL
          :annotation: = 3
 
-.. py:class:: pystk.Kart
+.. py:class:: pystk2.Kart
 
-.. py:class:: pystk.Powerup
+.. py:class:: pystk2.Powerup
 
    .. py:class:: Type
 
@@ -104,7 +98,7 @@
       .. py:attribute:: ZIPPER
          :annotation: = 4
 
-.. py:class:: pystk.Attachment
+.. py:class:: pystk2.Attachment
 
    .. py:class:: Type
 
@@ -126,6 +120,6 @@
       .. py:attribute:: SWATTER
          :annotation: = 3
 
-.. py:class:: pystk.Soccer
+.. py:class:: pystk2.Soccer
 
-.. py:class:: pystk.SoccerBall
+.. py:class:: pystk2.SoccerBall

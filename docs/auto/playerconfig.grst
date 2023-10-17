@@ -1,5 +1,5 @@
 
-.. py:class:: pystk.PlayerConfig
+.. py:class:: pystk2.PlayerConfig
 
    SuperTuxKart player configuration
 
