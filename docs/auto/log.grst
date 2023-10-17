@@ -16,6 +16,12 @@
    .. py:attribute:: info
       :annotation: = 2
 
+   .. py:property:: name () -> str
+      :annotation: property
+
+   .. py:property:: value () -> int
+      :annotation: property
+
    .. py:attribute:: verbose
       :annotation: = 1
 

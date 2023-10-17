@@ -28,6 +28,108 @@
       Standard-definition graphics settings
 
 
+   .. py:property:: animated_characters () -> bool
+      :annotation: property
+
+      Animate characters
+
+
+   .. py:property:: bloom () -> bool
+      :annotation: property
+
+      Enable the bloom effect
+
+
+   .. py:property:: degraded_IBL () -> bool
+      :annotation: property
+
+      Disable specular IBL
+
+
+   .. py:property:: display_adapter () -> int
+      :annotation: property
+
+      GPU to use (Linux only)
+
+
+   .. py:property:: dof () -> bool
+      :annotation: property
+
+      Depth of field effect
+
+
+   .. py:property:: dynamic_lights () -> bool
+      :annotation: property
+
+      Enable dynamic lighting
+
+
+   .. py:property:: glow () -> bool
+      :annotation: property
+
+      Enable glow around pickup objects
+
+
+   .. py:property:: high_definition_textures () -> int
+      :annotation: property
+
+      Enable high definition textures 0 / 2
+
+
+   .. py:property:: light_shaft () -> bool
+      :annotation: property
+
+      Enable light shafts
+
+
+   .. py:property:: mlaa () -> bool
+      :annotation: property
+
+      Enable anti-aliasing
+
+
+   .. py:property:: motionblur () -> bool
+      :annotation: property
+
+      Enable motion blur
+
+
+   .. py:property:: particles_effects () -> int
+      :annotation: property
+
+      Particle effect 0 (none) to 2 (full)
+
+
+   .. py:property:: render () -> bool
+      :annotation: property
+
+      Is rendering enabled?
+
+
+   .. py:property:: screen_height () -> int
+      :annotation: property
+
+      Height of the rendering surface
+
+
+   .. py:property:: screen_width () -> int
+      :annotation: property
+
+      Width of the rendering surface
+
+
+   .. py:property:: ssao () -> bool
+      :annotation: property
+
+      Enable screen space ambient occlusion
+
+
+   .. py:property:: texture_compression () -> bool
+      :annotation: property
+
+      Use texture compression
+
+
 .. py:function:: pystk2.init (config: pystk2.GraphicsConfig) -> None
 
    Initialize Python SuperTuxKart - this will download the game assets if not already done. Only call this function once per process. Calling it twice will cause a crash.

@@ -3,4 +3,6 @@
 
 .. autoclass:: Action
    :members:
+   :undoc-members:
+
 

@@ -11,3 +11,27 @@
 
       .. py:attribute:: PLAYER_CONTROL
          :annotation: = 0
+
+      .. py:property:: name () -> str
+         :annotation: property
+
+      .. py:property:: value () -> int
+         :annotation: property
+
+   .. py:property:: controller () -> pystk2.PlayerConfig.Controller
+      :annotation: property
+
+      Let the player (PLAYER_CONTROL) or AI (AI_CONTROL) drive. The AI ignores actions in step(action).
+
+
+   .. py:property:: kart () -> str
+      :annotation: property
+
+      Kart type, see list_karts for a list of kart types
+
+
+   .. py:property:: team () -> int
+      :annotation: property
+
+      Team of the player 0 or 1
+

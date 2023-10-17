@@ -3,3 +3,45 @@
 
    SuperTuxKart action
 
+
+   .. py:property:: acceleration () -> float
+      :annotation: property
+
+      Acceleration, normalize to 0..1
+
+
+   .. py:property:: brake () -> bool
+      :annotation: property
+
+      Hit the brakes. Zero acceleration and brake=True uses reverse gear.
+
+
+   .. py:property:: drift () -> bool
+      :annotation: property
+
+      Drift while turning
+
+
+   .. py:property:: fire () -> bool
+      :annotation: property
+
+      Fire the current pickup item
+
+
+   .. py:property:: nitro () -> bool
+      :annotation: property
+
+      Use nitro
+
+
+   .. py:property:: rescue () -> bool
+      :annotation: property
+
+      Call the rescue bird
+
+
+   .. py:property:: steer () -> float
+      :annotation: property
+
+      Steering angle, normalize to -1..1
+

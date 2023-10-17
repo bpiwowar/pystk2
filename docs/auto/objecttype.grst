@@ -18,6 +18,9 @@
    .. py:attribute:: kart
       :annotation: = 1
 
+   .. py:property:: name () -> str
+      :annotation: property
+
    .. py:attribute:: nitro
       :annotation: = 5
 
@@ -35,3 +38,6 @@
 
    .. py:attribute:: unknown
       :annotation: = 9
+
+   .. py:property:: value () -> int
+      :annotation: property

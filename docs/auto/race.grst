@@ -43,3 +43,15 @@
 
       Stop the race
 
+
+   .. py:property:: config () -> pystk2.RaceConfig
+      :annotation: property
+
+      The current race configuration
+
+
+   .. py:property:: render_data () -> List[pystk2.RenderData]
+      :annotation: property
+
+      rendering data from the last step
+

@@ -5,8 +5,8 @@ class TypedPropertyDocumenter(PropertyDocumenter):  # type: ignore
     """
     Specialized Documenter subclass for properties.
     """
-    objtype = 'typedproperty'
-    directivetype = 'method'
+    objtype = 'property'
+    directivetype = 'property'
     member_order = 60
 
     # before AttributeDocumenter
@@ -19,11 +19,6 @@ class TypedPropertyDocumenter(PropertyDocumenter):  # type: ignore
             import re
             sig = re.sub('(.*) ->', '() ->', getdoc(self.object.fget))
         return sig
-
-    def add_directive_header(self, sig: str) -> None:
-        super().add_directive_header(sig)
-        sourcename = self.get_sourcename()
-        self.add_line('   :property:', sourcename)
 
 
 class EnumAttributeDocumenter(AttributeDocumenter):  # type: ignore

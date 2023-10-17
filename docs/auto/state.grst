@@ -12,11 +12,83 @@
       Update this object with the current world state
 
 
+   .. py:property:: ffa () -> pystk2.FFA
+      :annotation: property
+
+      Free for all match info
+
+
+   .. py:property:: items () -> List[pystk2.Item]
+      :annotation: property
+
+      State of items
+
+
+   .. py:property:: karts () -> List[pystk2.Kart]
+      :annotation: property
+
+      State of karts
+
+
+   .. py:property:: players () -> List[pystk2.Player]
+      :annotation: property
+
+      State of active players
+
+
+   .. py:property:: soccer () -> pystk2.Soccer
+      :annotation: property
+
+      Soccer match info
+
+
+   .. py:property:: time () -> float
+      :annotation: property
+
+      Game time
+
+
 .. py:class:: pystk2.Track
 
    .. py:method:: update (self: pystk2.Track) -> None
 
+   .. py:property:: length () -> float
+      :annotation: property
+
+      length of the track
+
+
+   .. py:property:: path_distance () -> numpy.ndarray[numpy.float32]
+      :annotation: property
+
+      Distance down the track of each line segment (float N x 2)
+
+
+   .. py:property:: path_nodes () -> numpy.ndarray[numpy.float32]
+      :annotation: property
+
+      Center line of the drivable area as line segments of 3d coordinates (float N x 2 x 3)
+
+
+   .. py:property:: path_width () -> numpy.ndarray[numpy.float32]
+      :annotation: property
+
+      Width of the path segment (float N)
+
+
 .. py:class:: pystk2.Player
+
+   .. py:property:: camera () -> pystk2.Camera
+      :annotation: property
+
+      Camera parameters of the player
+
+
+   .. py:property:: kart () -> pystk2.Kart
+      :annotation: property
+
+      Kart of the player
+
 
 .. py:class:: pystk2.Camera
 
@@ -36,6 +108,42 @@
 
       .. py:attribute:: REVERSE
          :annotation: = 2
+
+      .. py:property:: name () -> str
+         :annotation: property
+
+      .. py:property:: value () -> int
+         :annotation: property
+
+   .. py:property:: aspect () -> float
+      :annotation: property
+
+      Aspect ratio
+
+
+   .. py:property:: fov () -> float
+      :annotation: property
+
+      Field of view
+
+
+   .. py:property:: mode () -> pystk2.Camera.Mode
+      :annotation: property
+
+      Camera mode
+
+
+   .. py:property:: projection () -> readonly_memoryview
+      :annotation: property
+
+      Projection matrix (float 4x4)
+
+
+   .. py:property:: view () -> readonly_memoryview
+      :annotation: property
+
+      View matrix (float 4x4)
+
 
 .. py:class:: pystk2.Item
 
@@ -59,7 +167,163 @@
       .. py:attribute:: NITRO_SMALL
          :annotation: = 3
 
+      .. py:property:: name () -> str
+         :annotation: property
+
+      .. py:property:: value () -> int
+         :annotation: property
+
+   .. py:property:: id () -> int
+      :annotation: property
+
+      Item id compatible with instance data
+
+
+   .. py:property:: location () -> float3
+      :annotation: property
+
+      3D world location of the item
+
+
+   .. py:property:: size () -> float
+      :annotation: property
+
+      Size of the object
+
+
+   .. py:property:: type () -> pystk2.Item.Type
+      :annotation: property
+
+      Item type
+
+
 .. py:class:: pystk2.Kart
+
+   .. py:property:: attachment () -> pystk2.Attachment
+      :annotation: property
+
+      Attachment of kart
+
+
+   .. py:property:: distance_down_track () -> float
+      :annotation: property
+
+      Distance traveled on current lap
+
+
+   .. py:property:: finish_time () -> float
+      :annotation: property
+
+      Time to complete race
+
+
+   .. py:property:: finished_laps () -> int
+      :annotation: property
+
+      Number of laps completed
+
+
+   .. py:property:: front () -> float3
+      :annotation: property
+
+      Front direction of kart 1/2 kart length forward from location
+
+
+   .. py:property:: id () -> int
+      :annotation: property
+
+      Kart id compatible with instance labels
+
+
+   .. py:property:: jumping () -> bool
+      :annotation: property
+
+      Is the kart jumping?
+
+
+   .. py:property:: lap_time () -> float
+      :annotation: property
+
+      Time to completion for last lap
+
+
+   .. py:property:: lives () -> int
+      :annotation: property
+
+      Lives in three strikes battle
+
+
+   .. py:property:: location () -> float3
+      :annotation: property
+
+      3D world location of the kart
+
+
+   .. py:property:: max_steer_angle () -> float
+      :annotation: property
+
+      Maximum steering angle
+
+
+   .. py:property:: name () -> str
+      :annotation: property
+
+      Player name
+
+
+   .. py:property:: overall_distance () -> float
+      :annotation: property
+
+      Overall distance traveled
+
+
+   .. py:property:: player_id () -> int
+      :annotation: property
+
+      Player id
+
+
+   .. py:property:: powerup () -> pystk2.Powerup
+      :annotation: property
+
+      Powerup collected
+
+
+   .. py:property:: race_result () -> bool
+      :annotation: property
+
+      Did the kart finish the race?
+
+
+   .. py:property:: rotation () -> Quaternion
+      :annotation: property
+
+      Quaternion rotation of the kart
+
+
+   .. py:property:: shield_time () -> float
+      :annotation: property
+
+      Second the shield is up for
+
+
+   .. py:property:: size () -> float3
+      :annotation: property
+
+      Width, height and length of kart
+
+
+   .. py:property:: velocity () -> float3
+      :annotation: property
+
+      Velocity of kart
+
+
+   .. py:property:: wheel_base () -> float
+      :annotation: property
+
+      Wheel base
+
 
 .. py:class:: pystk2.Powerup
 
@@ -98,6 +362,24 @@
       .. py:attribute:: ZIPPER
          :annotation: = 4
 
+      .. py:property:: name () -> str
+         :annotation: property
+
+      .. py:property:: value () -> int
+         :annotation: property
+
+   .. py:property:: num () -> int
+      :annotation: property
+
+      Number of powerups
+
+
+   .. py:property:: type () -> pystk2.Powerup.Type
+      :annotation: property
+
+      Powerup type
+
+
 .. py:class:: pystk2.Attachment
 
    .. py:class:: Type
@@ -120,6 +402,60 @@
       .. py:attribute:: SWATTER
          :annotation: = 3
 
+      .. py:property:: name () -> str
+         :annotation: property
+
+      .. py:property:: value () -> int
+         :annotation: property
+
+   .. py:property:: time_left () -> float
+      :annotation: property
+
+      Seconds until attachment detaches/explodes
+
+
+   .. py:property:: type () -> pystk2.Attachment.Type
+      :annotation: property
+
+      Attachment type
+
+
 .. py:class:: pystk2.Soccer
 
+   .. py:property:: ball () -> pystk2.SoccerBall
+      :annotation: property
+
+      Soccer ball information
+
+
+   .. py:property:: goal_line () -> Annotated[List[Annotated[List[float3], FixedSize(2)]], FixedSize(2)]
+      :annotation: property
+
+      Start and end of the goal line for each team
+
+
+   .. py:property:: score () -> int[2]
+      :annotation: property
+
+      Score of the soccer match
+
+
 .. py:class:: pystk2.SoccerBall
+
+   .. py:property:: id () -> int
+      :annotation: property
+
+      Object id of the soccer ball
+
+
+   .. py:property:: location () -> float3
+      :annotation: property
+
+      3D world location of the item
+
+
+   .. py:property:: size () -> float
+      :annotation: property
+
+      Size of the ball
+

@@ -39,9 +39,9 @@ def gen_signature(s, indent):
     for e in all_c:
         if e.tagname == 'desc_annotation':
             a = get_text(e).strip()
-            if a == 'property':
-                additional.append(':%s:'%a)
-            elif a == 'static':
+            # if a == 'property':
+            #     additional.append(':%s:'%a)
+            if a == 'static':
                 additional.append(':staticmethod:')
             elif a == 'class':
                 pass
