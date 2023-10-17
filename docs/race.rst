@@ -9,23 +9,23 @@ You need to set the graphics settings before starting a race, see :ref:`graphics
 
 .. code-block:: python
 
-    pystk.init(pystk.GraphicsConfig.hd())
+    pystk2.init(pystk2.GraphicsConfig.hd())
 
-    config = pystk.RaceConfig(track='lighthouse', num_kart=2)
-    config.players[0].controller = pystk.PlayerConfig.Controller.AI_CONTROL
-    race = pystk.Race(config)
+    config = pystk2.RaceConfig(track='lighthouse', num_kart=2)
+    config.players[0].controller = pystk2.PlayerConfig.Controller.AI_CONTROL
+    race = pystk2.Race(config)
     race.start()
 
     n_steps = 100
     for step in range(n_steps):
-        race.step() # Use an optional action and set controller to pystk.PlayerConfig.Controller.PLAYER_CONTROL
+        race.step() # Use an optional action and set controller to pystk2.PlayerConfig.Controller.PLAYER_CONTROL
         # Use race.render_data[0].image
         # Use race.render_data[0].depth
         # Use race.render_data[0].instance
     race.stop()
     del race
     # You may start a new race after you delete the old race object
-    pystk.clean()
+    pystk2.clean()
 
 .. include:: auto/race.grst
 

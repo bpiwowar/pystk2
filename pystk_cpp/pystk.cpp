@@ -171,6 +171,10 @@ const PySTKGraphicsConfig & PySTKGraphicsConfig::none() {
     return config;
 }
 
+#ifdef RENDERDOC
+static RENDERDOC_API_1_1_2 *rdoc_api = NULL;
+#endif
+
 #ifndef SERVER_ONLY
 class PySTKRenderTarget {
     friend class PySTKRace;
@@ -208,7 +212,7 @@ void PySTKRenderTarget::fetch(std::shared_ptr<PySTKRenderData> data) {
     if (const auto rt_gl3 = dynamic_cast<GL3RenderTarget*>(rt_.get())) {
         RTT * rtts = rt_gl3->getRTTs();
         if (rtts && data) {
-            unsigned int W = rtts->getWidth(), H = rtts->getHeight();
+            // unsigned int W = rtts->getWidth(), H = rtts->getHeight();
             // Read the color and depth image
             data->color_buf_ = color_buf_[buf_num_];
             data->depth_buf_ = depth_buf_[buf_num_];
@@ -244,66 +248,16 @@ void PySTKAction::get(const KartControl * control) {
 }
 
 PySTKRace * PySTKRace::running_kart = 0;
-PySTKGraphicsConfig PySTKRace::graphics_config_ = {};
-static int is_init = 0;
-#ifdef RENDERDOC
-static RENDERDOC_API_1_1_2 *rdoc_api = NULL;
-#endif
-void PySTKRace::init(const PySTKGraphicsConfig & config, const std::string & data_dir) {
-    if (running_kart)
-        throw std::invalid_argument("Cannot init while supertuxkart is running!");
-    if (is_init) {
-        throw std::invalid_argument("PySTK already initialized! Call clean first!");
-    } else {
-        is_init = 1;
-        graphics_config_ = config;
-        Log::info("pystk", "Using data directory %s", data_dir.c_str());
-        initUserConfig(data_dir);
-        stk_config->load(file_manager->getAsset("stk_config.xml"));
-        initGraphicsConfig(config);
-        story_mode_timer = new StoryModeTimer();
-        initRest();
-        load();
-    }
-#ifdef RENDERDOC
 
-#ifdef _WIN32
-    if(HMODULE mod = GetModuleHandleA("renderdoc.dll"))
-    {
-        pRENDERDOC_GetAPI RENDERDOC_GetAPI =
-            (pRENDERDOC_GetAPI)GetProcAddress(mod, "RENDERDOC_GetAPI");
-        int ret = RENDERDOC_GetAPI(eRENDERDOC_API_Version_1_1_2, (void **)&rdoc_api);
-        assert(ret == 1);
-    }
-#elif defined(__linux__)
-    if(void *mod = dlopen("librenderdoc.so", RTLD_NOW | RTLD_NOLOAD))
-    {
-        pRENDERDOC_GetAPI RENDERDOC_GetAPI = (pRENDERDOC_GetAPI)dlsym(mod, "RENDERDOC_GetAPI");
-        int ret = RENDERDOC_GetAPI(eRENDERDOC_API_Version_1_1_2, (void **)&rdoc_api);
-        assert(ret == 1);
-    }
-#endif
 
-#endif
-}
-void PySTKRace::clean() {
-    if (running_kart)
-        throw std::invalid_argument("Cannot clean up while supertuxkart is running!");
-    if (is_init) {
-        cleanSuperTuxKart();
-        Log::flushBuffers();
-
-        delete file_manager;
-        file_manager = NULL;
-        is_init = 0;
-    }
-}
 bool PySTKRace::isRunning() { return running_kart; }
 PySTKRace::PySTKRace(const PySTKRaceConfig & config) {
     if (running_kart)
         throw std::invalid_argument("Cannot run more than one supertux instance per process!");
-    if (!is_init)
-        throw std::invalid_argument("PySTK not initialized yet! Call pystk.init().");
+
+    // Keep a copy of the environment so it is destroyed after us
+    environment = PyGlobalEnvironment::instance();
+    
     running_kart = this;
     
     resetObjectId();
@@ -322,6 +276,7 @@ std::vector<std::string> PySTKRace::listKarts() {
     return std::vector<std::string>();
 }
 PySTKRace::~PySTKRace() {
+    Log::debug("pystk", "Destroying PySTK Race");
     running_kart = nullptr;
 }
 
@@ -377,10 +332,9 @@ public:
     { return ai_controller_->finishedRace(time); }
 
     virtual bool  saveState(BareNetworkString *buffer) const {
-        // FIXME: do something?
+        return false;
     }
     virtual void  rewindTo(BareNetworkString *buffer) {
-        // FIXME: do something?
     }
 
 };
@@ -396,7 +350,7 @@ void PySTKRace::start() {
     race_manager->startNew(false);
 
 #ifndef SERVER_ONLY
-    if (graphics_config_.render) {
+    if (PyGlobalEnvironment::graphics_config().render) {
 
         for(unsigned long int i=0; i<config_.players.size(); i++) {
             auto render_target = irr_driver->createRenderTarget( {(unsigned int)UserConfigParams::m_width, (unsigned int)UserConfigParams::m_height}, "player"+std::to_string(i));
@@ -433,7 +387,7 @@ void PySTKRace::stop() {
 void PySTKRace::render(float dt) {
     World *world = World::getWorld();
 #ifndef SERVER_ONLY
-    if (world && graphics_config_.render)
+    if (world && PyGlobalEnvironment::graphics_config().render)
     {
         // Render all views
         for(unsigned int i = 0; i < Camera::getNumCameras() && i < render_targets_.size(); i++) {
@@ -481,7 +435,7 @@ bool PySTKRace::step() {
     PropertyAnimator::get()->update(dt);
     
     // Then render
-    if (graphics_config_.render) {
+    if (PyGlobalEnvironment::graphics_config().render) {
         World::getWorld()->updateGraphics(dt);
 
         irr_driver->update(dt);
@@ -490,57 +444,16 @@ bool PySTKRace::step() {
         World::getWorld()->updateGraphics(dt);
     }
 
-    if (graphics_config_.render && !irr_driver->getDevice()->run())
+    if (PyGlobalEnvironment::graphics_config().render && !irr_driver->getDevice()->run())
         return false;
 #ifdef RENDERDOC
     if(rdoc_api) rdoc_api->EndFrameCapture(NULL, NULL);
 #endif
     auto race_manager = RaceManager::get();
+    Log::debug("pystk", "Step: %s / %d < %d ?", race_manager ? "race": "no race", 
+        race_manager ? race_manager->getFinishedPlayers() : 0,
+        race_manager ? race_manager->getNumPlayers() : 0);
     return race_manager && race_manager->getFinishedPlayers() < race_manager->getNumPlayers();
-}
-
-void PySTKRace::load() {
-    
-    material_manager->loadMaterial();
-    // Preload the explosion effects (explode.png)
-    ParticleKindManager::get()->getParticles("explosion.xml");
-    ParticleKindManager::get()->getParticles("explosion_bomb.xml");
-    ParticleKindManager::get()->getParticles("explosion_cake.xml");
-    ParticleKindManager::get()->getParticles("jump_explosion.xml");
-
-    // Creates the main loop
-    main_loop = new MainLoop(0 /* parent_pid */);
-
-    // Reading the rest of the player data needs the unlock manager to
-    // initialise the game slots of all players and the AchievementsManager
-    // to initialise the AchievementsStatus, so it is done only now.
-    ProjectileManager::get()->loadData();
-
-    // Needs the kart and track directories to load potential challenges
-    // in those dirs, so it can only be created after reading tracks
-    // and karts.
-    unlock_manager = new UnlockManager();
-    AchievementsManager::create();
-
-    // Both item_manager and powerup_manager load models and therefore
-    // textures from the model directory. To avoid reading the
-    // materials.xml twice, we do this here once for both:
-    file_manager->pushTextureSearchPath(file_manager->getAsset(FileManager::MODEL,""), "models");
-    const std::string materials_file = file_manager->getAsset(FileManager::MODEL,"materials.xml");
-    if(materials_file!="")
-    {
-        // Some of the materials might be needed later, so just add
-        // them all permanently (i.e. as shared). Adding them temporary
-        // will actually not be possible: powerup_manager adds some
-        // permanent icon materials, which would (with the current
-        // implementation) make the temporary materials permanent anyway.
-        material_manager->addSharedMaterial(materials_file);
-    }
-    Referee::init();
-    powerup_manager->loadPowerupsModels();
-    ItemManager::loadDefaultItemMeshes();
-    attachment_manager->loadModels();
-    file_manager->popTextureSearchPath();
 }
 
 static RaceManager::MinorRaceModeType translate_mode(PySTKRaceConfig::RaceMode mode) {
@@ -602,7 +515,66 @@ void PySTKRace::setupConfig(const PySTKRaceConfig & config) {
 
 }
 
-void PySTKRace::initGraphicsConfig(const PySTKGraphicsConfig & config) {
+
+// =====
+// ===== PyGlobalEnvironment
+// =====
+
+std::shared_ptr<PyGlobalEnvironment> PyGlobalEnvironment::_instance = nullptr;
+
+PyGlobalEnvironment::PyGlobalEnvironment(const PySTKGraphicsConfig & config, const std::string & data_dir) : graphics_config_(config) {
+    Log::info("pystk", "Using data directory %s", data_dir.c_str());
+    initUserConfig(data_dir);
+    stk_config->load(file_manager->getAsset("stk_config.xml"));
+    initGraphicsConfig(config);
+    story_mode_timer = new StoryModeTimer();
+    initRest();
+
+    load();
+}
+
+PyGlobalEnvironment::~PyGlobalEnvironment() {
+    Log::debug("pystk", "Cleanup pystk2 environment");
+    clean();
+}
+
+bool PyGlobalEnvironment::is_initialized() {
+    return _instance != nullptr;
+}
+
+void PyGlobalEnvironment::init(const PySTKGraphicsConfig & config, const std::string & data_dir) {
+    if (PySTKRace::running_kart)
+        throw std::invalid_argument("Cannot init while supertuxkart is running!");
+
+    _instance = std::shared_ptr<PyGlobalEnvironment>(new PyGlobalEnvironment(config, data_dir));
+#ifdef RENDERDOC
+
+#ifdef _WIN32
+    if(HMODULE mod = GetModuleHandleA("renderdoc.dll"))
+    {
+        pRENDERDOC_GetAPI RENDERDOC_GetAPI =
+            (pRENDERDOC_GetAPI)GetProcAddress(mod, "RENDERDOC_GetAPI");
+        int ret = RENDERDOC_GetAPI(eRENDERDOC_API_Version_1_1_2, (void **)&rdoc_api);
+        assert(ret == 1);
+    }
+#elif defined(__linux__)
+    if(void *mod = dlopen("librenderdoc.so", RTLD_NOW | RTLD_NOLOAD))
+    {
+        pRENDERDOC_GetAPI RENDERDOC_GetAPI = (pRENDERDOC_GetAPI)dlsym(mod, "RENDERDOC_GetAPI");
+        int ret = RENDERDOC_GetAPI(eRENDERDOC_API_Version_1_1_2, (void **)&rdoc_api);
+        assert(ret == 1);
+    }
+#endif
+
+#endif
+}
+
+PySTKGraphicsConfig const & PyGlobalEnvironment::graphics_config() {
+    return instance()->graphics_config_;
+}
+
+
+void PyGlobalEnvironment::initGraphicsConfig(const PySTKGraphicsConfig & config) {
     UserConfigParams::m_width  = config.screen_width;
     UserConfigParams::m_height = config.screen_height;
     UserConfigParams::m_glow = config.glow;
@@ -624,7 +596,7 @@ void PySTKRace::initGraphicsConfig(const PySTKGraphicsConfig & config) {
 //=============================================================================
 /** Initialises the minimum number of managers to get access to user_config.
  */
-void PySTKRace::initUserConfig(const std::string & data_dir)
+void PyGlobalEnvironment::initUserConfig(const std::string & data_dir)
 {
 #ifdef WIN32
     _putenv_s("SUPERTUXKART_DATADIR", data_dir.c_str());
@@ -644,7 +616,7 @@ void PySTKRace::initUserConfig(const std::string & data_dir)
 }   // initUserConfig
 
 //=============================================================================
-void PySTKRace::initRest()
+void PyGlobalEnvironment::initRest()
 {
     SP::setMaxTextureSize();
     irr_driver = new IrrDriver();
@@ -728,7 +700,7 @@ void PySTKRace::initRest()
 //=============================================================================
 /** Frees all manager and their associated memory.
  */
-void PySTKRace::cleanSuperTuxKart()
+void PyGlobalEnvironment::cleanSuperTuxKart()
 {
     // Stop music (this request will go into the sfx manager queue, so it needs
     // to be done before stopping the thread).
@@ -751,7 +723,6 @@ void PySTKRace::cleanSuperTuxKart()
     if(history)                 delete history;
     history = nullptr;
 
-    delete ParticleKindManager::get();
     PlayerManager::destroy();
     if(unlock_manager)          delete unlock_manager;
 
@@ -777,7 +748,7 @@ void PySTKRace::cleanSuperTuxKart()
 /**
  * Frees all the memory of initUserConfig()
  */
-void PySTKRace::cleanUserConfig()
+void PyGlobalEnvironment::cleanUserConfig()
 {
     if(stk_config)              delete stk_config;
     stk_config = nullptr;
@@ -788,3 +759,77 @@ void PySTKRace::cleanUserConfig()
     if(irr_driver)              delete irr_driver;
     irr_driver = nullptr;
 }   // cleanUserConfig
+
+
+std::shared_ptr<PyGlobalEnvironment> PyGlobalEnvironment::instance() {
+    if (!_instance) {
+        throw std::invalid_argument("pystk2 has not been initialized");
+    }
+
+    return _instance;
+}
+
+void PyGlobalEnvironment::cleanup() {
+    _instance = nullptr;
+}
+
+void PyGlobalEnvironment::load() {
+    material_manager->loadMaterial();
+    // Preload the explosion effects (explode.png)
+    ParticleKindManager::get()->getParticles("explosion.xml");
+    ParticleKindManager::get()->getParticles("explosion_bomb.xml");
+    ParticleKindManager::get()->getParticles("explosion_cake.xml");
+    ParticleKindManager::get()->getParticles("jump_explosion.xml");
+
+    // Creates the main loop
+    main_loop = new MainLoop(0 /* parent_pid */);
+
+    // Reading the rest of the player data needs the unlock manager to
+    // initialise the game slots of all players and the AchievementsManager
+    // to initialise the AchievementsStatus, so it is done only now.
+    ProjectileManager::get()->loadData();
+
+    // Needs the kart and track directories to load potential challenges
+    // in those dirs, so it can only be created after reading tracks
+    // and karts.
+    unlock_manager = new UnlockManager();
+    AchievementsManager::create();
+
+    // Both item_manager and powerup_manager load models and therefore
+    // textures from the model directory. To avoid reading the
+    // materials.xml twice, we do this here once for both:
+    file_manager->pushTextureSearchPath(file_manager->getAsset(FileManager::MODEL,""), "models");
+    const std::string materials_file = file_manager->getAsset(FileManager::MODEL,"materials.xml");
+    if(materials_file!="")
+    {
+        // Some of the materials might be needed later, so just add
+        // them all permanently (i.e. as shared). Adding them temporary
+        // will actually not be possible: powerup_manager adds some
+        // permanent icon materials, which would (with the current
+        // implementation) make the temporary materials permanent anyway.
+        material_manager->addSharedMaterial(materials_file);
+    }
+    Referee::init();
+    powerup_manager->loadPowerupsModels();
+    ItemManager::loadDefaultItemMeshes();
+    attachment_manager->loadModels();
+    file_manager->popTextureSearchPath();
+
+    // Create first player and associate player with keyboard
+    auto profile = PlayerManager::get()->getPlayer(0);
+    StateManager::get()->createActivePlayer(
+        profile, input_manager->getDeviceManager()->getKeyboard(0)
+    );
+    profile->initRemainingData();
+}
+
+
+void PyGlobalEnvironment::clean() {
+    if (PySTKRace::running_kart)
+        throw std::invalid_argument("Cannot clean up while supertuxkart is running!");
+    cleanSuperTuxKart();
+    Log::flushBuffers();
+
+    delete file_manager;
+    file_manager = NULL;
+}

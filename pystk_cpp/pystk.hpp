@@ -75,20 +75,38 @@ struct PySTKAction {
 	void get(const KartControl * control);
 };
 
-class PySTKRace {
+/// @brief Holds the STK global environment
+class PyGlobalEnvironment {
+	static std::shared_ptr<PyGlobalEnvironment> _instance;
+	PySTKGraphicsConfig graphics_config_;
+
 protected: // Static methods
+	PyGlobalEnvironment(const PySTKGraphicsConfig & config, const std::string & data_dir);
+
+	static void load();
 	static void initRest();
     static void initUserConfig(const std::string & data_dir);
 	static void initGraphicsConfig(const PySTKGraphicsConfig & config);
+
+	static void clean();
 	static void cleanSuperTuxKart();
 	static void cleanUserConfig();
-	static PySTKGraphicsConfig graphics_config_;
+public:
+	~PyGlobalEnvironment();
+	static std::shared_ptr<PyGlobalEnvironment> instance();
 
+	static PySTKGraphicsConfig const & graphics_config();
+
+	static void init(const PySTKGraphicsConfig & config, const std::string & data_dir);
+	static void cleanup();
+
+	static bool is_initialized();
+};
+
+class PySTKRace {
+	std::shared_ptr<PyGlobalEnvironment> environment;
 public: // Static methods
 	static PySTKRace * running_kart;
-	static void init(const PySTKGraphicsConfig & config, const std::string & data_dir);
-	static void load();
-	static void clean();
 	static bool isRunning();
 	static std::vector<std::string> listTracks();
 	static std::vector<std::string> listKarts();

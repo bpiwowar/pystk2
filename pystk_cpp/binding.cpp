@@ -89,7 +89,7 @@ ASSETS_DIR = str(ASSETS_DIR)
 )", py::globals(), locals);
     
         auto pystk_data = locals["ASSETS_DIR"].cast<std::string>();
-        PySTKRace::init(config, pystk_data);
+        PyGlobalEnvironment::init(config, pystk_data);
     }
 }
 
@@ -270,13 +270,13 @@ PYBIND11_MODULE(pystk2, m) {
     
     // Initialize SuperTuxKart
     m.def("init", &path_and_init, py::arg("config"), "Initialize Python SuperTuxKart - this will download the game assets if not already done. Only call this function once per process. Calling it twice will cause a crash.");
-    m.def("clean", &PySTKRace::clean, "Free Python SuperTuxKart, call this once at exit (optional). Will be called atexit otherwise.");
+    m.def("clean", &PyGlobalEnvironment::cleanup, "Free Python SuperTuxKart, call this once at exit (optional). Will be called atexit otherwise.");
     
     auto atexit = py::module::import("atexit");
         atexit.attr("register")(py::cpp_function([]() {
             // A bit ugly
             PySTKRace::running_kart = nullptr;
-            PySTKRace::clean();
+            PyGlobalEnvironment::cleanup();
         }));
 }
 
