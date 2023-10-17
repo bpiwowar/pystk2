@@ -56,6 +56,9 @@ jobs:
         CIBW_ARCHS_MACOS: universal2
         CIBW_ARCHS_WINDOWS: AMD64
 
+        # Skip PyPy builds
+        CIBW_SKIP: pp*
+
         # Download dependencies for manylinux (CentOS 7)
         CIBW_BEFORE_ALL_LINUX: |
           yum -y install cmake bluez-libs-devel openssl-devel libcurl-devel freetype-devel harfbuzz-devel libjpeg-turbo-devel libogg-devel libpng-devel libvorbis-devel openal-soft-devel SDL2-devel
