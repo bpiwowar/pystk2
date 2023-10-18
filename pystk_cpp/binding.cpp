@@ -28,9 +28,17 @@ PYBIND11_MAKE_OPAQUE(std::vector<PySTKPlayerConfig>);
 void path_and_init(const PySTKGraphicsConfig & config) {
     // Download data if no
 
-    auto locals = py::dict();
+    const auto data_dir_env = getenv("SUPERTUXKART_DATADIR");
+    if (data_dir_env) 
     {
-    py::exec(R"(
+        // Use environment variable
+        PyGlobalEnvironment::init(config, data_dir_env);
+    }
+    else
+    {
+
+        auto locals = py::dict();
+        py::exec(R"(
 from pathlib import Path
 import sys
 from tarfile import TarFile
@@ -90,7 +98,7 @@ ASSETS_DIR = str(ASSETS_DIR)
     
         auto pystk_data = locals["ASSETS_DIR"].cast<std::string>();
         PyGlobalEnvironment::init(config, pystk_data);
-    }
+    } 
 }
 
 PYBIND11_MODULE(pystk2, m) {

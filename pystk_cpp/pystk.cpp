@@ -598,11 +598,16 @@ void PyGlobalEnvironment::initGraphicsConfig(const PySTKGraphicsConfig & config)
  */
 void PyGlobalEnvironment::initUserConfig(const std::string & data_dir)
 {
+    // Use environment variable
+    const auto data_dir_env = getenv("SUPERTUXKART_DATADIR");
+
+    if (!data_dir_env) {
 #ifdef WIN32
     _putenv_s("SUPERTUXKART_DATADIR", data_dir.c_str());
 #else
    setenv("SUPERTUXKART_DATADIR", data_dir.c_str(), true);
 #endif
+    }
 
     file_manager = new FileManager();
     // Some parts of the file manager needs user config (paths for models
