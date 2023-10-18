@@ -1,15 +1,8 @@
 name: Wheels
 
 on:
-  workflow_dispatch:
-  pull_request:
-  push:
-    branches:
-     - master
-     - pystk
   release:
-    types:
-      - published
+    types: [created]
 
 env:
   FORCE_COLOR: 3
