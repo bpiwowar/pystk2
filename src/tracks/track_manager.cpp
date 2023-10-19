@@ -16,6 +16,7 @@
 //  along with this program; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+#include "guiengine/engine.hpp"
 #include "tracks/track_manager.hpp"
 
 #include "config/stk_config.hpp"
@@ -345,7 +346,9 @@ int TrackManager::getTrackIndexByIdent(const std::string& ident) const
 
 // ----------------------------------------------------------------------------
 void TrackManager::onDemandLoadTrackScreenshots()
-{
+{   
+    if (GUIEngine::isReallyNoGraphics())
+        return;
     if (irr_driver->getVideoDriver()->getDriverType() != video::EDT_VULKAN)
         return;
     for (unsigned i = 0; i < m_tracks.size(); i++)

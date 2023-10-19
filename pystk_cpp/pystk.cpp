@@ -69,7 +69,6 @@
 #include "graphics/sp/sp_shader.hpp"
 #include "graphics/sp/sp_texture_manager.hpp"
 #include "input/input.hpp"
-#include "input/keyboard_device.hpp"
 #include "input/input_manager.hpp"
 #include "input/device_manager.hpp"
 #include "io/file_manager.hpp"
@@ -103,6 +102,7 @@
 #include "buffer.hpp"
 #include "tips/tips_manager.hpp"
 #include "utils/translation.hpp"
+#include "fake_input_device.hpp"
 
 #ifdef RENDERDOC
 #include "renderdoc_app.h"
@@ -277,6 +277,11 @@ std::vector<std::string> PySTKRace::listKarts() {
 }
 PySTKRace::~PySTKRace() {
     Log::debug("pystk", "Destroying PySTK Race");
+    
+    // Exit race if this has not been done yet
+    if (World::getWorld()) {
+        RaceManager::get()->exitRace();
+    }
     running_kart = nullptr;
 }
 
@@ -350,16 +355,14 @@ void PySTKRace::start() {
     race_manager->startNew(false);
 
 #ifndef SERVER_ONLY
-    if (PyGlobalEnvironment::graphics_config().render) {
-
+    // Setup the cameras to follow each player
+    if (!GUIEngine::isReallyNoGraphics()) {
         for(unsigned long int i=0; i<config_.players.size(); i++) {
             auto render_target = irr_driver->createRenderTarget( {(unsigned int)UserConfigParams::m_width, (unsigned int)UserConfigParams::m_height}, "player"+std::to_string(i));
             
             // FIXME: Remove???
-            // for(unsigned int i = 0; i < Camera::getNumCameras() && i < render_targets_.size(); i++) {
-                Camera::getCamera(i)->activate(false);
-                render_target->renderToTexture(Camera::getCamera(i)->getCameraSceneNode(), 0.);
-            // }
+            Camera::getCamera(i)->activate(false);
+            render_target->renderToTexture(Camera::getCamera(i)->getCameraSceneNode(), 0.);
 
             render_targets_.push_back(std::make_unique<PySTKRenderTarget>(std::move(render_target)));
         }
@@ -382,19 +385,22 @@ void PySTKRace::stop() {
     if (World::getWorld())
     {
         RaceManager::get()->exitRace();
+        // World::getWorld()->update();
     }
 }
 void PySTKRace::render(float dt) {
     World *world = World::getWorld();
 #ifndef SERVER_ONLY
-    if (world && PyGlobalEnvironment::graphics_config().render)
+    if (world && !GUIEngine::isReallyNoGraphics())
     {
         // Render all views
         for(unsigned int i = 0; i < Camera::getNumCameras() && i < render_targets_.size(); i++) {
             Camera::getCamera(i)->activate(false);
             render_targets_[i]->render(Camera::getCamera(i)->getCameraSceneNode(), dt);
         }
-        while (render_data_.size() < render_targets_.size()) render_data_.push_back( std::make_shared<PySTKRenderData>() );
+        while (render_data_.size() < render_targets_.size()) 
+            render_data_.push_back( std::make_shared<PySTKRenderData>() );
+        
         // Fetch all views
         for(unsigned int i = 0; i < render_targets_.size(); i++) {
             render_targets_[i]->fetch(render_data_[i]);
@@ -472,11 +478,7 @@ static RaceManager::MinorRaceModeType translate_mode(PySTKRaceConfig::RaceMode m
 void PySTKRace::setupConfig(const PySTKRaceConfig & config) {
     config_ = config;
 
-    // FIXME: hack, active player is first    
-    InputDevice *device;
-
-    // Use keyboard 0 by default in --no-start-screen
-    device = input_manager->getDeviceManager()->getKeyboard(0);
+    InputDevice *device = FakeInputDevice::instance();
 
     auto player_manager = PlayerManager::get();
     auto state_manager = StateManager::get();
@@ -623,34 +625,44 @@ void PyGlobalEnvironment::initUserConfig(const std::string & data_dir)
 //=============================================================================
 void PyGlobalEnvironment::initRest()
 {
-    SP::setMaxTextureSize();
+
+    if (!graphics_config_.render) {
+        // Fully disable graphics
+        GUIEngine::reallyDisableGraphics();
+    }
+
+#ifndef SERVER_ONLY
+        TipsManager::create();
+#endif
+
     irr_driver = new IrrDriver();
+    // Now create the actual non-null device in the irrlicht driver
+    irr_driver->initDevice();
+
+    StkTime::init();   // grabs the timer object from the irrlicht device
 
     if (irr_driver->getDevice() == NULL)
     {
         Log::fatal("main", "Couldn't initialise irrlicht device. Quitting.\n");
     }
 
-    StkTime::init();   // grabs the timer object from the irrlicht device
 
-    // Now create the actual non-null device in the irrlicht driver
-    irr_driver->initDevice();
     IrrlichtDevice* device = irr_driver->getDevice();
     video::IVideoDriver* driver = device->getVideoDriver();
-
     font_manager = new FontManager();
-    input_manager = new InputManager();
 
-#ifndef SERVER_ONLY
-        TipsManager::create();
-#endif
+    if (graphics_config_.render) 
+    {
+        SP::setMaxTextureSize();
 
-    GUIEngine::init(device, driver, StateManager::get());
-    // GUIEngine::renderLoading(true, true, false);
-    // GUIEngine::flushRenderLoading(true/*launching*/);
+        GUIEngine::init(device, driver, StateManager::get());
+        // GUIEngine::renderLoading(true, true, false);
+        // GUIEngine::flushRenderLoading(true/*launching*/);
 
-    font_manager->loadFonts();
-    SP::loadShaders();
+        SP::loadShaders();
+    } else {
+        GUIEngine::init(device, driver, StateManager::get());
+    }
 
     PlayerManager::create();
 
@@ -667,10 +679,13 @@ void PyGlobalEnvironment::initRest()
     powerup_manager         = new PowerupManager       ();
     attachment_manager      = new AttachmentManager    ();
 
-    // The maximum texture size can not be set earlier, since
-    // e.g. the background image needs to be loaded in high res.
 #ifndef SERVER_ONLY
-    irr_driver->setMaxTextureSize();
+    if (!GUIEngine::isReallyNoGraphics())
+    {
+        // The maximum texture size can not be set earlier, since
+        // e.g. the background image needs to be loaded in high res.
+        irr_driver->setMaxTextureSize();
+    }
 #endif
     KartPropertiesManager::addKartSearchDir(
                  file_manager->getAddonsFile("karts/"));
@@ -731,6 +746,9 @@ void PyGlobalEnvironment::cleanSuperTuxKart()
     PlayerManager::destroy();
     if(unlock_manager)          delete unlock_manager;
 
+    if (music_manager)          delete music_manager;
+    music_manager = nullptr;
+    
     Referee::cleanup();
     ParticleKindManager::get()->cleanup();
     if(font_manager)            delete font_manager;
@@ -823,7 +841,7 @@ void PyGlobalEnvironment::load() {
     // Create first player and associate player with keyboard
     auto profile = PlayerManager::get()->getPlayer(0);
     StateManager::get()->createActivePlayer(
-        profile, input_manager->getDeviceManager()->getKeyboard(0)
+        profile, FakeInputDevice::instance()
     );
     profile->initRemainingData();
 }

@@ -84,7 +84,7 @@ protected: // Static methods
 	PyGlobalEnvironment(const PySTKGraphicsConfig & config, const std::string & data_dir);
 
 	static void load();
-	static void initRest();
+	void initRest();
     static void initUserConfig(const std::string & data_dir);
 	static void initGraphicsConfig(const PySTKGraphicsConfig & config);
 

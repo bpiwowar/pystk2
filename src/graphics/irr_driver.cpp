@@ -212,10 +212,12 @@ IrrDriver::IrrDriver()
     m_scene_complexity           = 0;
 
 #ifndef SERVER_ONLY
+if (!GUIEngine::isReallyNoGraphics()) {
     for (unsigned i = 0; i < Q_LAST; i++)
     {
         m_perf_query[i] = new GPUTimer(m_perf_query_phase[i]);
     }
+}
 #endif
 }   // IrrDriver
 
@@ -231,10 +233,12 @@ IrrDriver::~IrrDriver()
     delete m_wind;
     delete m_renderer;
 #ifndef SERVER_ONLY
+if (!GUIEngine::isReallyNoGraphics()) {
     for (unsigned i = 0; i < Q_LAST; i++)
     {
         delete m_perf_query[i];
     }
+}
 #endif
     assert(m_device != NULL);
     m_device->drop();
@@ -246,8 +250,10 @@ IrrDriver::~IrrDriver()
 const char* IrrDriver::getGPUQueryPhaseName(unsigned q)
 {
 #ifndef SERVER_ONLY
+if (!GUIEngine::isReallyNoGraphics()) {
     assert(q < Q_LAST);
     return m_perf_query_phase[q];
+}
 #else
     return "";
 #endif
@@ -259,7 +265,9 @@ const char* IrrDriver::getGPUQueryPhaseName(unsigned q)
 void IrrDriver::reset()
 {
 #ifndef SERVER_ONLY
+if (!GUIEngine::isReallyNoGraphics()) {
     m_renderer->resetPostProcessing();
+}
 #endif
 }   // reset
 
@@ -391,7 +399,9 @@ void IrrDriver::createListOfVideoModes()
 void IrrDriver::initDevice()
 {
 #if !defined(SERVER_ONLY)
+if (!GUIEngine::isReallyNoGraphics()) {
     GE::setShaderFolder(file_manager->getShadersDir());
+}
 #endif
     SIrrlichtCreationParameters params;
     core::stringw display_msg;
@@ -486,7 +496,9 @@ void IrrDriver::initDevice()
 
 begin:
 #if !defined(SERVER_ONLY)
+if (!GUIEngine::isReallyNoGraphics()) {
         GE::setVideoDriver(NULL);
+}
 #endif
 
         video::E_DRIVER_TYPE driver_created = video::EDT_NULL;
@@ -506,12 +518,14 @@ begin:
         {
             driver_created = video::EDT_VULKAN;
 #ifndef SERVER_ONLY
+if (!GUIEngine::isReallyNoGraphics()) {
             GE::getGEConfig()->m_texture_compression =
                 UserConfigParams::m_texture_compression;
             GE::getGEConfig()->m_render_scale =
                 UserConfigParams::m_scale_rtts_factor;
             GE::getGEConfig()->m_vulkan_fullscreen_desktop =
                 UserConfigParams::m_vulkan_fullscreen_desktop;
+}
 #endif
         }
         else
@@ -627,7 +641,8 @@ begin:
     UserConfigParams::m_real_height = (unsigned)((float)UserConfigParams::m_height / m_device->getNativeScaleY());
 
 #ifndef SERVER_ONLY 
-
+    bool recreate_device = false;
+if (!GUIEngine::isReallyNoGraphics()) {
     GE::setVideoDriver(m_device->getVideoDriver());
 
     GE::GEVulkanDriver* vk = GE::getVKDriver();
@@ -656,7 +671,6 @@ begin:
     CentralVideoSettings::m_supports_sp = true;
     CVS->init();
 
-    bool recreate_device = false;
 
     // Some drivers are able to create OpenGL 3.1 context, but shader-based
     // pipeline doesn't work for them. For example some radeon drivers
@@ -672,6 +686,7 @@ begin:
         params.ForceLegacyDevice = true;
         recreate_device = true;
     }
+}
 #endif
 
     // Don't recreate on switch!
@@ -800,6 +815,7 @@ begin:
     m_video_driver->endScene();
 
 #ifndef SERVER_ONLY
+if (!GUIEngine::isReallyNoGraphics()) {
     if (CVS->isGLSL())
     {
         Log::info("irr_driver", "GLSL supported.");
@@ -816,6 +832,7 @@ begin:
         Log::warn("irr_driver", "Using the fixed pipeline (old GPU, or "
                                 "shaders disabled in options)");
     }
+}
 #endif
 
     // Only change video driver settings if we are showing graphics
@@ -853,7 +870,7 @@ begin:
 #ifndef SERVER_ONLY
     // set cursor visible by default (what's the default is not too clearly documented,
     // so let's decide ourselves...)
-    if (!GUIEngine::isNoGraphics())
+    if (!GUIEngine::isReallyNoGraphics())
         m_device->getCursorControl()->setVisible(true);
 #endif
     m_pointer_shown = true;

@@ -769,6 +769,7 @@ namespace GUIEngine
     std::vector<MenuMessage> gui_messages;
 
     bool g_is_no_graphics[PT_COUNT];
+    bool g_really_is_no_graphics[PT_COUNT];
     // ------------------------------------------------------------------------
     void showMessage(const core::stringw& message, const float time)
     {
@@ -1442,6 +1443,7 @@ namespace GUIEngine
     void renderLoading(bool clearIcons, bool launching, bool update_tips)
     {
 #ifndef SERVER_ONLY
+if (!GUIEngine::isReallyNoGraphics()) {
         if (!TipsManager::get()->isEmpty() && update_tips)
         {
             core::stringw tip = TipsManager::get()->getTip("general");
@@ -1531,6 +1533,7 @@ namespace GUIEngine
                 x = ICON_MARGIN;
             }
         }
+} // really no graphics
 #endif
     } // renderLoading
 
@@ -1651,6 +1654,19 @@ namespace GUIEngine
     {
         return g_is_no_graphics[STKProcess::getType()];
     }   // isNoGraphics
+
+    void reallyDisableGraphics()
+    {
+        g_really_is_no_graphics[STKProcess::getType()] = true;
+        disableGraphics();
+    }   // reallyDisableGraphics
+
+    // -----------------------------------------------------------------------
+    bool isReallyNoGraphics()
+    {
+        return g_really_is_no_graphics[STKProcess::getType()];
+    }   // isReallyNoGraphics
+
 #endif
 
 }   // namespace GUIEngine

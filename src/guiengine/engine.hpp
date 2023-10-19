@@ -288,6 +288,10 @@ namespace GUIEngine
 #else
     void disableGraphics();
     bool isNoGraphics();
+
+    /// @brief allows to run without a graphic card, by totally disabling graphics
+    void reallyDisableGraphics();
+    bool isReallyNoGraphics();
 #endif
 }
 

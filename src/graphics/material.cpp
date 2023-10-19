@@ -965,6 +965,7 @@ void  Material::setMaterialProperties(video::SMaterial *m, scene::IMeshBuffer* m
 std::function<void(irr::video::IImage*)> Material::getMaskImageMani() const
 {
 #ifndef SERVER_ONLY
+if (!GUIEngine::isReallyNoGraphics()) {
     std::function<void(irr::video::IImage*)> image_mani;
     core::dimension2du max_size = irr_driver->getVideoDriver()
         ->getDriverAttributes().getAttributeAsDimension2d("MAX_TEXTURE_SIZE");
@@ -1075,6 +1076,7 @@ std::function<void(irr::video::IImage*)> Material::getMaskImageMani() const
         };
         return image_mani;
     }
+}
 #endif
     return nullptr;
 } // getMaskImageMani

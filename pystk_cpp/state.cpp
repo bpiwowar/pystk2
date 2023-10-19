@@ -498,9 +498,11 @@ struct PyPlayer {
 	
 	void update(int player_id) {
 		id = player_id;
-		if (!camera)
-			camera.reset(new PyCamera());
-		camera->update(player_id);
+		if (!GUIEngine::isNoGraphics()) {
+			if (!camera)
+				camera.reset(new PyCamera());
+			camera->update(player_id);
+		}
 	}
 };
 

@@ -119,6 +119,7 @@ KartProperties::KartProperties(const std::string &filename)
 KartProperties::~KartProperties()
 {
 #ifndef SERVER_ONLY
+if (!GUIEngine::isReallyNoGraphics()) {
     if (m_kart_model.use_count() == 1)
     {
         if (CVS->isGLSL())
@@ -141,6 +142,7 @@ KartProperties::~KartProperties()
                 it++;
         }
     }
+}
 #endif
 }   // ~KartProperties
 
@@ -198,6 +200,7 @@ void KartProperties::copyFrom(const KartProperties *source)
 void KartProperties::handleOnDemandLoadTexture()
 {
 #ifndef SERVER_ONLY
+if (!GUIEngine::isReallyNoGraphics()) {
     if (GE::getDriver()->getDriverType() != video::EDT_VULKAN)
         return;
     std::set<std::string> files;
@@ -218,6 +221,7 @@ void KartProperties::handleOnDemandLoadTexture()
             image_extensions.end())
             GE::getGEConfig()->m_ondemand_load_texture_paths.insert(f);
     }
+}
 #endif
 }   // handleOnDemandLoadTexture
 
@@ -299,10 +303,12 @@ void KartProperties::load(const std::string &filename, const std::string &node)
     file_manager->pushModelSearchPath(m_root);
     file_manager->pushTextureSearchPath(m_root, unique_id);
 #ifndef SERVER_ONLY
+if (!GUIEngine::isReallyNoGraphics()) {
     if (CVS->isGLSL())
     {
         SP::SPShaderManager::get()->loadSPShaders(m_root);
     }
+}
 #endif
 
     STKTexManager::getInstance()

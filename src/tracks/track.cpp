@@ -193,8 +193,10 @@ Track::Track(const std::string &filename)
 Track::~Track()
 {
 #ifndef SERVER_ONLY
+if (!GUIEngine::isReallyNoGraphics()) {
     if (GE::getDriver()->getDriverType() == video::EDT_VULKAN)
         GE::getGEConfig()->m_ondemand_load_texture_paths.erase(m_screenshot);
+}
 #endif
 
     // Note that the music information in m_music is globally managed
@@ -331,6 +333,7 @@ void Track::cleanup()
     Graph::destroy();
     m_item_manager = nullptr;
 #ifndef SERVER_ONLY
+if (!GUIEngine::isReallyNoGraphics()) {
     if (CVS->isGLSL())
     {
         if (!GUIEngine::isNoGraphics())
@@ -341,6 +344,7 @@ void Track::cleanup()
         SP::resetEmptyFogColor();
     }
     ParticleKindManager::get()->cleanUpTrackSpecificGfx();
+}
 #endif
 
     for (unsigned int i = 0; i < m_animated_textures.size(); i++)
@@ -374,9 +378,11 @@ void Track::cleanup()
     m_object_physics_only_nodes.clear();
 
 #ifndef SERVER_ONLY
+if (!GUIEngine::isReallyNoGraphics()) {
     irr_driver->removeNode(m_sun);
     if (CVS->isGLSL())
         m_sun->drop();
+}
 #endif
     delete m_track_mesh;
     m_track_mesh = NULL;
@@ -388,8 +394,10 @@ void Track::cleanup()
     m_gfx_effect_mesh = NULL;
 
 #ifndef SERVER_ONLY
+if (!GUIEngine::isReallyNoGraphics()) {
     if (CVS->isGLSL())
         irr_driver->cleanSunInterposer();
+}
 #endif
 
 
@@ -431,11 +439,13 @@ void Track::cleanup()
     {
         video::ITexture* tex = (video::ITexture*)m_sky_textures[i];
 #ifndef SERVER_ONLY
+if (!GUIEngine::isReallyNoGraphics()) {
         if (GE::getDriver()->getDriverType() == video::EDT_VULKAN)
         {
             std::string fullpath = tex->getFullPath().c_str();
             GE::getGEConfig()->m_ondemand_load_texture_paths.erase(fullpath);
         }
+}
 #endif
         tex->drop();
         if (tex->getReferenceCount() == 1)
@@ -452,6 +462,7 @@ void Track::cleanup()
     }
 
 #ifndef SERVER_ONLY
+if (!GUIEngine::isReallyNoGraphics()) {
     irr_driver->clearGlowingNodes();
     irr_driver->clearLights();
     irr_driver->clearForcedBloom();
@@ -463,6 +474,7 @@ void Track::cleanup()
         ShaderFilesManager::getInstance()->removeUnusedShaderFiles();
         SP::SPTextureManager::get()->removeUnusedTextures();
     }
+}
 #endif
     if(UserConfigParams::logMemory())
     {
@@ -547,9 +559,11 @@ void Track::loadTrackInfo()
     m_sun_specular_color    = video::SColor(255, 255, 255, 255);
     m_sun_diffuse_color     = video::SColor(255, 255, 255, 255);
     m_sun_position          = core::vector3df(0, 10, 10);
+if (!GUIEngine::isReallyNoGraphics()) {
     irr_driver->setSSAORadius(1.);
     irr_driver->setSSAOK(1.5);
     irr_driver->setSSAOSigma(1.);
+}
     XMLNode *root           = file_manager->createXMLTree(m_filename);
 
     if(!root || root->getName()!="track")
@@ -632,12 +646,14 @@ void Track::loadTrackInfo()
     {
         m_screenshot = m_root+m_screenshot;
 #ifndef SERVER_ONLY
+if (!GUIEngine::isReallyNoGraphics()) {
         if (GE::getDriver()->getDriverType() == video::EDT_VULKAN)
         {
             m_screenshot = file_manager->getFileSystem()
                 ->getAbsolutePath(m_screenshot.c_str()).c_str();
             GE::getGEConfig()->m_ondemand_load_texture_paths.insert(m_screenshot);
         }
+}
 #endif
     }
     delete root;
@@ -2527,6 +2543,7 @@ void Track::handleSky(const XMLNode &xml_node, const std::string &filename)
 #endif   // !SERVER_ONLY
             {
 #ifndef SERVER_ONLY
+if (!GUIEngine::isReallyNoGraphics()) {
                 if (GE::getDriver()->getDriverType() == video::EDT_VULKAN)
                 {
                     io::path p = file_manager->searchTexture(v[i]).c_str();
@@ -2538,6 +2555,7 @@ void Track::handleSky(const XMLNode &xml_node, const std::string &filename)
                             insert(fullpath.c_str());
                     }
                 }
+}
 #endif
                 video::ITexture* t = irr_driver->getTexture(v[i]);
                 if (t)
@@ -2575,6 +2593,7 @@ void Track::handleSky(const XMLNode &xml_node, const std::string &filename)
         v = StringUtils::split(sh_textures, ' ');
 
 #ifndef SERVER_ONLY
+if (!GUIEngine::isReallyNoGraphics()) {
         for (unsigned int i = 0; i<v.size(); i++)
         {
             if (CVS->isGLSL())
@@ -2596,6 +2615,7 @@ void Track::handleSky(const XMLNode &xml_node, const std::string &filename)
                 m_spherical_harmonics_textures.push_back((void*)0x0);
             }
         }   // for i<v.size()
+}
 #endif   // !SERVER_ONLY
 
     }

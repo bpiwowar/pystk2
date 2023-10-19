@@ -952,7 +952,7 @@ endif()
 endif() # skipping installs for PySTK
 
 # Build python bindings
-pybind11_add_module(pystk2 pystk_cpp/binding.cpp pystk_cpp/buffer.cpp pystk_cpp/pystk.cpp pystk_cpp/simulation.cpp pystk_cpp/objecttype.cpp pystk_cpp/util.cpp pystk_cpp/state.cpp pystk_cpp/pickle.cpp)
+pybind11_add_module(pystk2 pystk_cpp/binding.cpp pystk_cpp/buffer.cpp pystk_cpp/pystk.cpp pystk_cpp/simulation.cpp pystk_cpp/objecttype.cpp pystk_cpp/util.cpp pystk_cpp/state.cpp pystk_cpp/pickle.cpp pystk_cpp/fake_input_device.cpp)
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_compile_definitions(pystk2 PUBLIC RENDERDOC)
 endif()
