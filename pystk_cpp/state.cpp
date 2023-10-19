@@ -555,11 +555,30 @@ struct PyWorldState {
 	float time = 0;
 	std::shared_ptr<PySoccer> soccer;
 	std::shared_ptr<PyFFA> ffa;
-	
+	WorldStatus::Phase phase = WorldStatus::Phase::SETUP_PHASE;
+
 	static void define(py::object m) {
 		py::class_<PyWorldState, std::shared_ptr<PyWorldState>> c(m, "WorldState");
+		py::enum_<WorldStatus::Phase>(c, "Phase")
+			.value("TRACK_INTRO_PHASE", WorldStatus::Phase::TRACK_INTRO_PHASE)
+        	.value("SETUP_PHASE", WorldStatus::Phase::SETUP_PHASE)
+        	.value("WAIT_FOR_SERVER_PHASE", WorldStatus::Phase::WAIT_FOR_SERVER_PHASE)
+        	.value("SERVER_READY_PHASE", WorldStatus::Phase::SERVER_READY_PHASE)
+        	.value("READY_PHASE", WorldStatus::Phase::READY_PHASE)
+        	.value("SET_PHASE", WorldStatus::Phase::SET_PHASE)
+        	.value("GO_PHASE", WorldStatus::Phase::GO_PHASE)
+        	.value("MUSIC_PHASE", WorldStatus::Phase::MUSIC_PHASE)
+        	.value("RACE_PHASE", WorldStatus::Phase::RACE_PHASE)
+        	.value("DELAY_FINISH_PHASE", WorldStatus::Phase::DELAY_FINISH_PHASE)
+        	.value("RESULT_DISPLAY_PHASE", WorldStatus::Phase::RESULT_DISPLAY_PHASE)
+        	.value("FINISH_PHASE", WorldStatus::Phase::FINISH_PHASE)
+        	.value("IN_GAME_MENU_PHASE", WorldStatus::Phase::IN_GAME_MENU_PHASE)
+        	.value("UNDEFINED_PHASE", WorldStatus::Phase::UNDEFINED_PHASE)
+		;
+
 		c.def(py::init<>())
 #define R(x, d) .def_readonly(#x, &PyWorldState::x, d)
+		  R(phase, "World status phase")
 		  R(players, "State of active players")
 		  R(karts, "State of karts")
 		  R(items, "State of items")
@@ -615,6 +634,8 @@ struct PyWorldState {
 			players.resize(pid);
 			assignPlayersKart();
 			time = w->getTime();
+			phase = w->getPhase();
+
 			if (sw) {
 				if (!soccer)
 					soccer = std::make_shared<PySoccer>();

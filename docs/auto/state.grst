@@ -1,6 +1,56 @@
 
 .. py:class:: pystk2.WorldState
 
+   .. py:class:: Phase
+
+      .. py:attribute:: DELAY_FINISH_PHASE
+         :annotation: = 9
+
+      .. py:attribute:: FINISH_PHASE
+         :annotation: = 11
+
+      .. py:attribute:: GO_PHASE
+         :annotation: = 6
+
+      .. py:attribute:: IN_GAME_MENU_PHASE
+         :annotation: = 12
+
+      .. py:attribute:: MUSIC_PHASE
+         :annotation: = 7
+
+      .. py:attribute:: RACE_PHASE
+         :annotation: = 8
+
+      .. py:attribute:: READY_PHASE
+         :annotation: = 4
+
+      .. py:attribute:: RESULT_DISPLAY_PHASE
+         :annotation: = 10
+
+      .. py:attribute:: SERVER_READY_PHASE
+         :annotation: = 3
+
+      .. py:attribute:: SETUP_PHASE
+         :annotation: = 1
+
+      .. py:attribute:: SET_PHASE
+         :annotation: = 5
+
+      .. py:attribute:: TRACK_INTRO_PHASE
+         :annotation: = 0
+
+      .. py:attribute:: UNDEFINED_PHASE
+         :annotation: = 13
+
+      .. py:attribute:: WAIT_FOR_SERVER_PHASE
+         :annotation: = 2
+
+      .. py:property:: name () -> str
+         :annotation: property
+
+      .. py:property:: value () -> int
+         :annotation: property
+
    .. py:method:: set_kart_location (kart_id: int, position: float3, rotation: Quaternion = [0.0, 0.0, 0.0, 1.0], speed: float = 0) -> None
       :staticmethod:
 
@@ -28,6 +78,12 @@
       :annotation: property
 
       State of karts
+
+
+   .. py:property:: phase () -> pystk2.WorldState.Phase
+      :annotation: property
+
+      World status phase
 
 
    .. py:property:: players () -> List[pystk2.Player]

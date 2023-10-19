@@ -4,6 +4,7 @@ This file documents notable changes to PySTK2 across versions since its inceptio
 
 ## Master 
 
+- Includes world state phase to detect when the race starts
 - Prevents graphic driver initialization when running in no graphics mode
 
 ## Version 0.1.0
