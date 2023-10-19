@@ -20,6 +20,9 @@ classifiers = [
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
 ]
+repository = "https://github.com/bpiwowar/pystk2"
+documentation = "https://pystk2.readthedocs.io/"
+
 dependencies = [
   "platformdirs",
   "numpy"
