@@ -1,6 +1,7 @@
 # Python SuperTuxKart 2
 
 [![Documentation](https://readthedocs.org/projects/pystk2/badge/?version=latest)](http://pystk2.rtfd.io/)
+[![PyPI version](https://badge.fury.io/py/pystk2.svg)](https://badge.fury.io/py/pystk2)
 
 This is a modified version of the free SuperTuxKart racing game with Python bindings.
 A lot of code was borrowed from [PySTK](https://github.com/philkr/pystk), with some main differences:
@@ -9,7 +10,7 @@ A lot of code was borrowed from [PySTK](https://github.com/philkr/pystk), with s
 - The assets are now downloaded in a "cache" directory (no more data package)
 - (project) races can be run in parallel (e.g. for Reinforcement Learning experiments)
 
-The current source code is based on the SuperTuxKart 1.4 branch.
+The current source code is based on the SuperTuxKart 1.4 branch. The PySTK changelog can be found [in this file](./CHANGELOG_PYSTK.md).
 
 ## Licence
 
