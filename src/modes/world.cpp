@@ -285,8 +285,8 @@ void World::init()
 
     if (Camera::getNumCameras() == 0)
     {
+// For PySTK, always create a camera
 #ifndef PYSTK_BUILD
-        // For PySTK, always create a camera
         auto cl = LobbyProtocol::get<ClientLobby>();
         if ((NetworkConfig::get()->isServer() &&
             !GUIEngine::isNoGraphics()) ||

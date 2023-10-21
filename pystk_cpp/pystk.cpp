@@ -551,8 +551,14 @@ void PySTKRace::setupConfig(const PySTKRaceConfig & config) {
     race_manager->setMinorMode(translate_mode(config.mode));
 
     // All karts are players
+    std::size_t num_views = 0;
+    for(auto player: config.players) {
+        if (player.controller == PySTKPlayerConfig::PLAYER_CONTROL) {
+            ++num_views;
+        }
+    }
     race_manager->setNumKarts(config.num_kart);
-    race_manager->setNumPlayers(config.players.size());
+    race_manager->setNumPlayers(config.players.size(), num_views);
 
     for(int i=0; i<config.players.size(); i++) {
         std::string kart = config.players[i].kart.size() ? config.players[i].kart : (std::string)UserConfigParams::m_default_kart;
