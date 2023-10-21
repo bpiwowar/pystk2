@@ -46,6 +46,7 @@
 #include "karts/controller/test_ai.hpp"
 #include "karts/controller/network_ai_controller.hpp"
 #include "karts/controller/network_player_controller.hpp"
+#include "karts/controller/pystk_controller.hpp"
 #include "karts/kart.hpp"
 #include "karts/kart_model.hpp"
 #include "karts/kart_properties_manager.hpp"
@@ -284,11 +285,14 @@ void World::init()
 
     if (Camera::getNumCameras() == 0)
     {
+#ifndef PYSTK_BUILD
+        // For PySTK, always create a camera
         auto cl = LobbyProtocol::get<ClientLobby>();
         if ((NetworkConfig::get()->isServer() &&
             !GUIEngine::isNoGraphics()) ||
             RaceManager::get()->isWatchingReplay() ||
             (cl && cl->isSpectator()))
+#endif
         {
             // In case that the server is running with gui, watching replay or
             // spectating the game, create a camera and attach it to the first
@@ -517,8 +521,12 @@ std::shared_ptr<AbstractKart> World::createKart
         }
         else
         {
+#ifdef PYSTK_BUILD
+            controller = new PySTKController(new_kart.get(), local_player_id);
+#else
             controller = new LocalPlayerController(new_kart.get(),
                 local_player_id, handicap);
+#endif
             const PlayerProfile* p = StateManager::get()
                 ->getActivePlayer(local_player_id)->getConstProfile();
             if (p && p->getDefaultKartColor() > 0.0f)
@@ -765,7 +773,6 @@ void World::terminateRace()
     {
         updateHighscores(&best_highscore_rank);
     }
-
     if (m_process_type == PT_MAIN)
     {
         updateAchievementDataEndRace();

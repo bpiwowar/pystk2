@@ -749,7 +749,7 @@ if (USE_SWITCH)
   )
 endif()
 
-if(NOT SERVER_ONLY)
+if(NOT SERVER_ONLY AND NOT PYSTK_BUILD)
     if (USE_MOJOAL)
         target_link_libraries(supertuxkart mojoal ${LIBSAMPLERATE_LIBRARY})
     else()

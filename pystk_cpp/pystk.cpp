@@ -79,12 +79,14 @@
 #include "karts/abstract_kart.hpp"
 #include "karts/combined_characteristic.hpp"
 #include "karts/controller/ai_base_lap_controller.hpp"
+#include "karts/controller/pystk_controller.hpp"
 #include "karts/kart_model.hpp"
 #include "karts/kart_properties.hpp"
 #include "karts/kart_properties_manager.hpp"
 #include "modes/world.hpp"
 #include "race/grand_prix_manager.hpp"
 #include "race/history.hpp"
+#include "race/highscore_manager.hpp"
 #include "race/race_manager.hpp"
 #include "scriptengine/property_animator.hpp"
 #include "tracks/arena_graph.hpp"
@@ -285,6 +287,10 @@ PySTKRace::~PySTKRace() {
     running_kart = nullptr;
 }
 
+/**
+ * @brief Wrapper around a AI Controller
+ * TODO: evaluate if needed
+ */
 class LocalPlayerAIController: public Controller {
 public:
     Controller * ai_controller_;
@@ -337,9 +343,10 @@ public:
     { return ai_controller_->finishedRace(time); }
 
     virtual bool  saveState(BareNetworkString *buffer) const {
-        return false;
+        return ai_controller_->saveState(buffer);
     }
     virtual void  rewindTo(BareNetworkString *buffer) {
+        ai_controller_->rewindTo(buffer);
     }
 
 };
@@ -354,16 +361,52 @@ void PySTKRace::restart() {
 
 void PySTKRace::start() {
     auto race_manager = RaceManager::get();
+    
+    // This will setup karts for all players
     race_manager->setupPlayerKartInfo();
+
+    // Karts are initialized here
     race_manager->startNew(false);
 
-#ifndef SERVER_ONLY
+    // Setup cameras for some players
+    if (!GUIEngine::isNoGraphics()) {
+        // Setup a camera on the first player if nothing else...
+        if (Camera::getNumCameras() == 0) {
+            Log::fatal("pystk", "a camera should be setup");
+        }
+
+        std::size_t camera_ix = 0;
+
+        for(std::size_t ix = 0; ix < config_.players.size(); ++ix)
+        {
+            if (config_.players[ix].controller == PySTKPlayerConfig::PLAYER_CONTROL) {
+                auto kart = World::getWorld()->getKart(ix);
+                
+                if (camera_ix == 0) {
+                    Camera::getCamera(camera_ix)->setKart(kart);
+                } else {
+                    Camera *camera = Camera::createCamera(kart, camera_ix);
+                }
+                ++camera_ix;
+            }
+        }
+    }
+
+    auto state_manager = StateManager::get();
+    auto player_manager = PlayerManager::get();
+
+
+// FIXME: put back graphics fetching for now
+// (bug: pointer freed two times)
+#if !defined(SERVER_ONLY) and false
     // Setup the cameras to follow each player
     if (!GUIEngine::isReallyNoGraphics()) {
-        for(unsigned long int i=0; i<config_.players.size(); i++) {
-            auto render_target = irr_driver->createRenderTarget( {(unsigned int)UserConfigParams::m_width, (unsigned int)UserConfigParams::m_height}, "player"+std::to_string(i));
+        for(unsigned long int i=0; i<Camera::getNumCameras(); i++) {
             
-            // FIXME: Remove???
+            auto render_target = irr_driver->createRenderTarget(
+                {(unsigned int)UserConfigParams::m_width, (unsigned int)UserConfigParams::m_height}, "Player "+std::to_string(i)
+            );
+            
             Camera::getCamera(i)->activate(false);
             render_target->renderToTexture(Camera::getCamera(i)->getCameraSceneNode(), 0.);
 
@@ -373,10 +416,17 @@ void PySTKRace::start() {
 #endif  // SERVER_ONLY
     time_leftover_ = 0.f;
     
+    // Setup controllers
     for(int i=0; i<config_.players.size(); i++) {
-        AbstractKart * player_kart = World::getWorld()->getPlayerKart(i);
+        AbstractKart * kart = World::getWorld()->getKart(i);
         if (config_.players[i].controller == PySTKPlayerConfig::AI_CONTROL)
-            player_kart->setController(new LocalPlayerAIController(World::getWorld()->loadAIController(player_kart)));
+        {
+            kart->setController(
+                (Controller*)new LocalPlayerAIController(
+                    World::getWorld()->loadAIController(kart)
+                )
+            );                
+        }
     }
     ItemManager::updateRandomSeed(config_.seed);
     powerup_manager->setRandomSeed(config_.seed);
@@ -486,7 +536,7 @@ void PySTKRace::setupConfig(const PySTKRaceConfig & config) {
     auto player_manager = PlayerManager::get();
     auto state_manager = StateManager::get();
 
-    // Create player and associate player with keyboard
+    // Create as many players as needed
     while (state_manager->activePlayerCount() < config.players.size()) {
         auto profile = player_manager->addNewPlayer("pystk");
         state_manager->createActivePlayer(
@@ -499,7 +549,11 @@ void PySTKRace::setupConfig(const PySTKRaceConfig & config) {
     auto race_manager = RaceManager::get();
     race_manager->setDifficulty(RaceManager::Difficulty(config.difficulty));
     race_manager->setMinorMode(translate_mode(config.mode));
+
+    // All karts are players
+    race_manager->setNumKarts(config.num_kart);
     race_manager->setNumPlayers(config.players.size());
+
     for(int i=0; i<config.players.size(); i++) {
         std::string kart = config.players[i].kart.size() ? config.players[i].kart : (std::string)UserConfigParams::m_default_kart;
         const KartProperties *prop = kart_properties_manager->getKart(kart);
@@ -508,6 +562,7 @@ void PySTKRace::setupConfig(const PySTKRaceConfig & config) {
         race_manager->setPlayerKart(i, kart);
         race_manager->setKartTeam(i, (KartTeam)config.players[i].team);
     }
+
     race_manager->setReverseTrack(config.reverse);
     if (config.track.length())
         race_manager->setTrack(config.track);
@@ -515,7 +570,6 @@ void PySTKRace::setupConfig(const PySTKRaceConfig & config) {
         race_manager->setTrack("lighthouse");
     
     race_manager->setNumLaps(config.laps);
-    race_manager->setNumKarts(config.num_kart);
     race_manager->setMaxGoal(1<<30);
 
 }
@@ -681,6 +735,7 @@ void PyGlobalEnvironment::initRest()
     ProjectileManager::create();
     powerup_manager         = new PowerupManager       ();
     attachment_manager      = new AttachmentManager    ();
+    highscore_manager       = new HighscoreManager     ();
 
 #ifndef SERVER_ONLY
     if (!GUIEngine::isReallyNoGraphics())
