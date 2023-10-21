@@ -344,9 +344,12 @@ public:
 
 };
 void PySTKRace::restart() {
-    World::getWorld()->reset(true /* restart */);
-    ItemManager::updateRandomSeed(config_.seed);
-    powerup_manager->setRandomSeed(config_.seed);
+    if (World::getWorld())
+    {
+        World::getWorld()->reset(true /* restart */);
+        ItemManager::updateRandomSeed(config_.seed);
+        powerup_manager->setRandomSeed(config_.seed);
+    }
 }
 
 void PySTKRace::start() {

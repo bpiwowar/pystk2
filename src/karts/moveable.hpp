@@ -75,6 +75,8 @@ public:
     void          setNode(scene::ISceneNode *n);
     virtual const btVector3
                  &getVelocity()   const        {return m_body->getLinearVelocity();}
+    virtual const btVector3
+                 &getAngularVelocity()   const        {return m_body->getAngularVelocity();}
     const btVector3
                  &getVelocityLC() const        {return m_velocityLC;               }
     virtual void  setVelocity(const btVector3& v) {m_body->setLinearVelocity(v);   }

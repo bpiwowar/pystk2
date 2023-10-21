@@ -24,16 +24,17 @@ copyright = '2023, Benjamin Piwowarski'
 author = 'Benjamin Piwowarski'
 
 # The short X.Y version
-version = ''
+version = '0.2.0'
+
 # The full version, including alpha/beta/rc tags
-release = '0.0.1'
+release = '0.2.0'
 
 
 # -- General configuration ---------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
 #
-needs_sphinx = '2.1'
+needs_sphinx = '6'
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom

@@ -255,10 +255,22 @@
 
 .. py:class:: pystk2.Kart
 
+   .. py:property:: angular_velocity () -> float3
+      :annotation: property
+
+      Angular velocity of kart
+
+
    .. py:property:: attachment () -> pystk2.Attachment
       :annotation: property
 
       Attachment of kart
+
+
+   .. py:property:: basis () -> Annotated[List[float], FixedSize(9)]
+      :annotation: property
+
+      Basis for transformations
 
 
    .. py:property:: distance_down_track () -> float
@@ -318,7 +330,7 @@
    .. py:property:: max_steer_angle () -> float
       :annotation: property
 
-      Maximum steering angle
+      Maximum steering angle (depends on speed)
 
 
    .. py:property:: name () -> str
@@ -348,7 +360,7 @@
    .. py:property:: race_result () -> bool
       :annotation: property
 
-      Did the kart finish the race?
+      Did the kart win the race?
 
 
    .. py:property:: rotation () -> Quaternion
@@ -369,6 +381,12 @@
       Width, height and length of kart
 
 
+   .. py:property:: speed () -> float
+      :annotation: property
+
+      Speed of the kart in meters/second
+
+
    .. py:property:: velocity () -> float3
       :annotation: property
 
@@ -378,7 +396,7 @@
    .. py:property:: wheel_base () -> float
       :annotation: property
 
-      Wheel base
+      Wheel base (distance front to rear axis)
 
 
 .. py:class:: pystk2.Powerup

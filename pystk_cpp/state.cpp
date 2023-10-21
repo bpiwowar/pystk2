@@ -237,8 +237,10 @@ struct PyKart {
 	PyQuaternion rotation = {0,0,0,1};
 	PyVec3 front = {0,0,0};
 	PyVec3 velocity = {0,0,0};
+	PyVec3 angular_velocity = {0,0,0};
 	PyVec3 size = {0,0,0};
 	float shield_time = 0.f;
+	float speed = 0.f;
 	bool race_result = false;
 	bool jumping = false;
 	int finished_laps = 0;
@@ -264,9 +266,11 @@ struct PyKart {
 		  R(rotation, "Quaternion rotation of the kart")
 		  R(front, "Front direction of kart 1/2 kart length forward from location")
 		  R(velocity, "Velocity of kart")
+		  R(angular_velocity, "Angular velocity of kart")
+		  R(speed, "Speed of the kart in meters/second")
 		  R(size, "Width, height and length of kart")
 		  R(shield_time, "Second the shield is up for")
-		  R(race_result, "Did the kart finish the race?")
+		  R(race_result, "Did the kart win the race?")
 		  R(jumping, "Is the kart jumping?")
 		  R(lap_time, "Time to completion for last lap")
 		  R(finished_laps, "Number of laps completed")
@@ -275,8 +279,8 @@ struct PyKart {
 		  R(finish_time, "Time to complete race")
 		  R(attachment, "Attachment of kart")
 		  R(powerup, "Powerup collected")
-		  R(max_steer_angle, "Maximum steering angle")
-		  R(wheel_base, "Wheel base")
+		  R(max_steer_angle, "Maximum steering angle (depends on speed)")
+		  R(wheel_base, "Wheel base (distance front to rear axis)")
 		  R(lives, "Lives in three strikes battle")
 #undef R
 		 .def("__repr__", [](const PyKart &k) { return "<Kart id=" + std::to_string(k.id)+" player_id=" + std::to_string(k.player_id)+" name='"+k.name+"' ...>"; });
@@ -287,12 +291,15 @@ struct PyKart {
 	}
 	void update(const AbstractKart * k) {
 		if (k) {
+			// TODO: add skidding information
 			id = k->getWorldKartId();
+			speed = k->getSpeed();
 			name = k->getKartProperties()->getNonTranslatedName();
 			location = P(k->getXYZ());
 			rotation = {k->getRotation().x(),k->getRotation().y(),k->getRotation().z(),k->getRotation().w()};
 			front = P(k->getFrontXYZ());
 			velocity = P(k->getVelocity());
+			angular_velocity = P(k->getAngularVelocity());
 			size = {k->getKartWidth(), k->getKartHeight(), k->getKartLength()};
 			shield_time = k->getShieldTime();
 			race_result = k->getRaceResult();
@@ -659,7 +666,7 @@ struct PyWorldState {
 			}
 		}
 	}
-	static void set_kart_location(int id, const PyVec3 & position, const PyQuaternion & rotation, float speed) {
+	static void set_kart_location(std::size_t id, const PyVec3 & position, const PyQuaternion & rotation, float speed) {
 		World * w = World::getWorld();
 		World::KartList k = w->getKarts();
 		if (0 <= id && id < k.size()) {

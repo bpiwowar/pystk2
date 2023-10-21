@@ -6,7 +6,7 @@ Using pip
 
 .. code-block:: bash
 
-   pip install PySuperTuxKart2
+   pip install pystk2
 
 From source
 -----------
@@ -26,13 +26,6 @@ For easier development, it is recommended to install pystk2 directly through ``c
    pip install -e .
 
 CMake will place a copy of the library in the top level directly, with allows any examples to run from that directory.
-Make sure the fetch the game assets, if they don't already exist.
-
-.. code-block:: bash
-
-   cd pystk_data
-   pip install .
-
 
 Documentation
 -------------

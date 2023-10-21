@@ -10,6 +10,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # Allows to skip some parts of the original code
 ADD_DEFINITIONS(-DPYSTK_BUILD)
+set(PYSTK_BUILD TRUE)
 
 option (FORCE_COLORED_OUTPUT "Always produce ANSI-colored output (GNU/Clang only)." TRUE)
 if (${FORCE_COLORED_OUTPUT})
@@ -70,7 +71,7 @@ CMAKE_DEPENDENT_OPTION(BUILD_RECORDER "Build opengl recorder" ON
 CMAKE_DEPENDENT_OPTION(USE_SYSTEM_SQUISH "Use system Squish library instead of the built-in version, when available." ON
     "NOT SERVER_ONLY" OFF)
 CMAKE_DEPENDENT_OPTION(USE_WIIUSE "Support for wiimote input devices" ON
-    "NOT SERVER_ONLY;NOT CYGWIN;NOT USE_SWITCH;NOT MSVC" OFF)
+    "NOT SERVER_ONLY;NOT CYGWIN;NOT USE_SWITCH;NOT MSVC;NOT PYSTK_BUILD" OFF)
 CMAKE_DEPENDENT_OPTION(USE_DNS_C "Build bundled dns resolver" OFF "NOT CYGWIN;NOT USE_SWITCH" ON)
 CMAKE_DEPENDENT_OPTION(USE_MOJOAL "Use bundled MojoAL instead of system OpenAL" OFF "NOT APPLE" ON)
 
@@ -444,7 +445,7 @@ else()
     set(Angelscript_LIBRARIES angelscript)
 endif()
 
-if(NOT SERVER_ONLY)
+if(NOT SERVER_ONLY AND NOT PYSTK_BUILD)
     # OpenAL
     if (USE_MOJOAL)
         find_library(LIBSAMPLERATE_LIBRARY NAMES samplerate libsamplerate)

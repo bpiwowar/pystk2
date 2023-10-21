@@ -471,7 +471,7 @@ core::stringw LocalPlayerController::getName(bool include_handicap_string) const
 }   // getName
 
 void LocalPlayerController::doCrashHaptics() {
-#ifndef SERVER_ONLY
+#if !defined(SERVER_ONLY) && !defined(PYSTK_BUILD)
     if (RewindManager::get()->isRewinding())
         return;
     int now = World::getWorld()->getTicksSinceStart();

@@ -3,8 +3,8 @@ requires = ["scikit-build-core>=0.3.3", "pybind11"]
 build-backend = "scikit_build_core.build"
 
 [project]
-name = "pystk2"
-version = "0.1.0"
+name = "PySuperTuxKart2"
+version = "0.2.0"
 description="Python bindings for SuperTuxKart"
 readme = "README.md"
 authors = [
@@ -20,14 +20,15 @@ classifiers = [
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
 ]
-repository = "https://github.com/bpiwowar/pystk2"
-documentation = "https://pystk2.readthedocs.io/"
 
 dependencies = [
   "platformdirs",
   "numpy"
 ]
 
+[project.urls]
+repository = "https://github.com/bpiwowar/pystk2"
+documentation = "https://pystk2.readthedocs.io/"
 
 [tool.scikit-build]
 cmake.args = ["-DBUILD_RECORDER=0", "-DCHECK_ASSETS=off", "-DUSE_WIIUSE=off", "-DUSE_CRYPTO_OPENSSL=off", "-DUSE_SQLITE3=off"]
