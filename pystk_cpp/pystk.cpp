@@ -463,17 +463,20 @@ void PySTKRace::render(float dt) {
 }
 
 bool PySTKRace::step(const std::vector<PySTKAction> & a) {
+    if (a.size() != m_controlled.size())
+        throw std::invalid_argument("Expected " + std::to_string(m_controlled.size()) + " actions, got " + std::to_string(a.size()));
+
     for(int i=0; i<a.size(); i++) {
-        KartControl & control = World::getWorld()->getPlayerKart(i)->getControls();
+        auto ix = m_controlled[i];
+        KartControl & control = World::getWorld()->getPlayerKart(ix)->getControls();
         a[i].set(&control);
     }
     return step();
 }
 bool PySTKRace::step(const PySTKAction & a) {
-    KartControl & control = World::getWorld()->getPlayerKart(0)->getControls();
-    a.set(&control);
-    return step();
+    return step(std::vector<PySTKAction> { a });
 }
+
 bool PySTKRace::step() {
     const float dt = config_.step_size;
     if (!World::getWorld()) return false;
@@ -551,14 +554,20 @@ void PySTKRace::setupConfig(const PySTKRaceConfig & config) {
     race_manager->setMinorMode(translate_mode(config.mode));
 
     // All karts are players
-    std::size_t num_views = 0;
-    for(auto player: config.players) {
-        if (player.controller == PySTKPlayerConfig::PLAYER_CONTROL) {
-            ++num_views;
+    m_controlled.clear();
+    for(size_t ix = 0; ix < config.players.size(); ++ix) {
+        if (config.players[ix].controller == PySTKPlayerConfig::PLAYER_CONTROL) {
+            m_controlled.push_back(ix);
         }
     }
+    auto num_cameras = m_controlled.size();
+
+    // Sets the total number of karts
     race_manager->setNumKarts(config.num_kart);
-    race_manager->setNumPlayers(config.players.size(), num_views);
+
+    // The number of "local" players determine the number of cameras...
+    // so we use it (to avoid having cameras for AIs)
+    race_manager->setNumPlayers(config.players.size(), num_cameras);
 
     for(int i=0; i<config.players.size(); i++) {
         std::string kart = config.players[i].kart.size() ? config.players[i].kart : (std::string)UserConfigParams::m_default_kart;

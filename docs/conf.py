@@ -24,10 +24,10 @@ copyright = '2023, Benjamin Piwowarski'
 author = 'Benjamin Piwowarski'
 
 # The short X.Y version
-version = '0.2.0'
+version = '0.3.0'
 
 # The full version, including alpha/beta/rc tags
-release = '0.2.0'
+release = '0.3.0'
 
 
 # -- General configuration ---------------------------------------------------

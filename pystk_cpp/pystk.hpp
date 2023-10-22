@@ -105,6 +105,8 @@ public:
 
 class PySTKRace {
 	std::shared_ptr<PyGlobalEnvironment> environment;
+	/// Index of controlled players (non AI)
+	std::vector<std::size_t> m_controlled;
 public: // Static methods
 	static PySTKRace * running_kart;
 	static bool isRunning();

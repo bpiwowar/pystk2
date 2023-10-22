@@ -2,6 +2,12 @@
 
 This file documents notable changes to PySTK2 across versions since its inception.
 
+## Version 0.3.0
+
+- Fix bug when the controlled kart is not the first
+- Breaking change: quaternion is now [w, x, y, z] (and not the non standard [x, y, z, w])
+- Use numpy arrays rather than python lists
+
 ## Version 0.2.0
 
 - Fix with cameras: now set to the number of controlled players

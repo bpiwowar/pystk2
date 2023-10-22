@@ -235,7 +235,7 @@
       Item id compatible with instance data
 
 
-   .. py:property:: location () -> float3
+   .. py:property:: location () -> numpy.ndarray[numpy.float32]
       :annotation: property
 
       3D world location of the item
@@ -255,7 +255,7 @@
 
 .. py:class:: pystk2.Kart
 
-   .. py:property:: angular_velocity () -> float3
+   .. py:property:: angular_velocity () -> numpy.ndarray[numpy.float32]
       :annotation: property
 
       Angular velocity of kart
@@ -265,12 +265,6 @@
       :annotation: property
 
       Attachment of kart
-
-
-   .. py:property:: basis () -> Annotated[List[float], FixedSize(9)]
-      :annotation: property
-
-      Basis for transformations
 
 
    .. py:property:: distance_down_track () -> float
@@ -291,7 +285,7 @@
       Number of laps completed
 
 
-   .. py:property:: front () -> float3
+   .. py:property:: front () -> numpy.ndarray[numpy.float32]
       :annotation: property
 
       Front direction of kart 1/2 kart length forward from location
@@ -321,7 +315,7 @@
       Lives in three strikes battle
 
 
-   .. py:property:: location () -> float3
+   .. py:property:: location () -> numpy.ndarray[numpy.float32]
       :annotation: property
 
       3D world location of the kart
@@ -363,10 +357,10 @@
       Did the kart win the race?
 
 
-   .. py:property:: rotation () -> Quaternion
+   .. py:property:: rotation () -> numpy.ndarray[numpy.float32]
       :annotation: property
 
-      Quaternion rotation of the kart
+      Quaternion rotation of the kart [w, x, y, z]
 
 
    .. py:property:: shield_time () -> float
@@ -375,7 +369,7 @@
       Second the shield is up for
 
 
-   .. py:property:: size () -> float3
+   .. py:property:: size () -> numpy.ndarray[numpy.float32]
       :annotation: property
 
       Width, height and length of kart
@@ -387,10 +381,16 @@
       Speed of the kart in meters/second
 
 
-   .. py:property:: velocity () -> float3
+   .. py:property:: velocity () -> numpy.ndarray[numpy.float32]
       :annotation: property
 
       Velocity of kart
+
+
+   .. py:property:: velocity_lc () -> numpy.ndarray[numpy.float32]
+      :annotation: property
+
+      Velocity of kart (in the kart referential)
 
 
    .. py:property:: wheel_base () -> float
@@ -522,7 +522,7 @@
       Object id of the soccer ball
 
 
-   .. py:property:: location () -> float3
+   .. py:property:: location () -> numpy.ndarray[numpy.float32]
       :annotation: property
 
       3D world location of the item

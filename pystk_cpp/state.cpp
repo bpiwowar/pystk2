@@ -1,5 +1,5 @@
+#include <cassert>
 #include "state.hpp"
-
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
@@ -229,16 +229,38 @@ struct PyPowerup {
 	}
 };
 
+
+void setVector(py::array_t<float>  &x, btQuaternion const &q) {
+	assert(x.size() == 4);
+	auto _x = x.mutable_unchecked<1>(); // x must have ndim = 3; can be non-writeable
+
+	_x(0) = q.w();
+	_x(1) = q.x();
+	_x(2) = q.y();
+	_x(3) = q.z();
+}
+
+void setVector(py::array_t<float>  &x, Vec3 const &y) {
+	assert(x.size() == 3);
+	memcpy(x.mutable_data(0), y.m_floats, 3*sizeof(float));
+}
+
+/// @brief Returns a vector of the given dimension
+py::array_t<float> py_tensor(std::size_t dim) {
+	return py::array_t<float>(py::array::ShapeContainer({dim}));
+} 
+
 struct PyKart {
 	static void define();
 	int id = 0, player_id = -1;
 	std::string name;
-	PyVec3 location = {0,0,0};
-	PyQuaternion rotation = {0,0,0,1};
-	PyVec3 front = {0,0,0};
-	PyVec3 velocity = {0,0,0};
-	PyVec3 angular_velocity = {0,0,0};
-	PyVec3 size = {0,0,0};
+	py::array_t<float> location = py_tensor(3);
+	py::array_t<float> rotation = py_tensor(4);
+	py::array_t<float> front = py_tensor(3);
+	py::array_t<float> velocity = py_tensor(3);
+	py::array_t<float> velocity_lc = py_tensor(3);
+	py::array_t<float> angular_velocity = py_tensor(3);
+	py::array_t<float> size = py_tensor(3);
 	float shield_time = 0.f;
 	float speed = 0.f;
 	bool race_result = false;
@@ -263,9 +285,10 @@ struct PyKart {
 		  R(player_id, "Player id")
 		  R(name, "Player name")
 		  R(location, "3D world location of the kart")
-		  R(rotation, "Quaternion rotation of the kart")
+		  R(rotation, "Quaternion rotation of the kart [w, x, y, z]")
 		  R(front, "Front direction of kart 1/2 kart length forward from location")
 		  R(velocity, "Velocity of kart")
+		  R(velocity_lc, "Velocity of kart (in the kart referential)")
 		  R(angular_velocity, "Angular velocity of kart")
 		  R(speed, "Speed of the kart in meters/second")
 		  R(size, "Width, height and length of kart")
@@ -295,12 +318,14 @@ struct PyKart {
 			id = k->getWorldKartId();
 			speed = k->getSpeed();
 			name = k->getKartProperties()->getNonTranslatedName();
-			location = P(k->getXYZ());
-			rotation = {k->getRotation().x(),k->getRotation().y(),k->getRotation().z(),k->getRotation().w()};
-			front = P(k->getFrontXYZ());
-			velocity = P(k->getVelocity());
-			angular_velocity = P(k->getAngularVelocity());
-			size = {k->getKartWidth(), k->getKartHeight(), k->getKartLength()};
+			setVector(location, k->getXYZ());
+			// Sets the proper rotation so we can convert to the kart frame of reference
+			setVector(rotation, k->getRotation().inverse());
+			setVector(front, k->getFrontXYZ());
+			setVector(velocity_lc, k->getVelocityLC());
+			setVector(velocity, k->getVelocity());
+			setVector(angular_velocity, k->getAngularVelocity());
+			setVector(size, Vec3 {k->getKartWidth(), k->getKartHeight(), k->getKartLength()});
 			shield_time = k->getShieldTime();
 			race_result = k->getRaceResult();
 			jumping = k->isJumping();
@@ -315,7 +340,7 @@ struct PyKart {
 
 struct PyItem {
 	unsigned int id = 0;
-	PyVec3 location = {0,0,0};
+	py::array_t<float> location = py_tensor(3);
 	float size = 1.1f/* sqrt(1.2) */;
 	enum Type
 	{
@@ -347,7 +372,10 @@ struct PyItem {
 		  R(size, "Size of the object")
 		  R(type, "Item type")
 #undef R
-		 .def("__repr__", [E](const PyItem &i) { return "<Item id=" + std::to_string(i.id)+" location=" + std::to_string(i.location)+" size="+std::to_string(i.size)+" type="+std::string(py::repr(E(i.type)))+">"; });
+		 .def("__repr__", [E](const PyItem &i) { 
+			auto loc = i.location.unchecked<1>();
+			return "<Item id=" + std::to_string(i.id)+" location=(" + std::to_string(loc[0])+","+std::to_string(loc[1])+","+std::to_string(loc[2])
+		 +") size="+std::to_string(i.size)+" type="+std::string(py::repr(E(i.type)))+">"; });
 		add_pickle(c);
 	}
 	PyItem(const Item * i = nullptr) {
@@ -356,7 +384,7 @@ struct PyItem {
 	void update(const Item * i) {
 		if (i) {
 			id = i->getItemId();
-			location = P(i->getXYZ());
+			setVector(location, i->getXYZ());
 			size = i->getAvoidancePoint(0) ? (i->getXYZ() - *i->getAvoidancePoint(0)).length() : 1.1;
 			type = (Type)(int)i->getType();
 		}
@@ -364,7 +392,7 @@ struct PyItem {
 };
 struct PySoccerBall {
 	int id = 0;
-	PyVec3 location = {0,0,0};
+	py::array_t<float> location = py_tensor(3);
 	float size = 0;
 	
 	static void define(py::object m) {
@@ -374,7 +402,10 @@ struct PySoccerBall {
 		  R(location, "3D world location of the item")
 		  R(size, "Size of the ball")
 #undef R
-		 .def("__repr__", [](const PySoccerBall &i) { return "<SoccerBall id=" + std::to_string(i.id)+" location=" + std::to_string(i.location)+" size="+std::to_string(i.size)+">"; });
+		.def("__repr__", [](const PySoccerBall &i) { 
+			auto loc = i.location.unchecked<1>();
+			return "<SoccerBall id=" + std::to_string(i.id)+" location=(" + std::to_string(loc[0])+","+std::to_string(loc[1])+","+std::to_string(loc[2])+")  size="+std::to_string(i.size)+">"; 
+		});
 		add_pickle(c);
 	}
 	PySoccerBall(const SoccerWorld * w = nullptr) {
@@ -384,7 +415,7 @@ struct PySoccerBall {
 		if (w) {
 			// id = w->ballID();
 			id = w->getBallNode();
-			location = P(w->getBallPosition());
+			setVector(location, w->getBallPosition());
 			size = w->getBallDiameter();
 		}
 	}
@@ -704,11 +735,12 @@ void pickle(std::ostream & s, const PyKart & o) {
     pickle(s, o.id);
     pickle(s, o.player_id);
     pickle(s, o.name);
-    pickle(s, o.location);
-    pickle(s, o.rotation);
-    pickle(s, o.front);
-    pickle(s, o.velocity);
-    pickle(s, o.size);
+    ::pickle(s, o.location);
+    ::pickle(s, o.rotation);
+    ::pickle(s, o.front);
+    ::pickle(s, o.velocity);
+    ::pickle(s, o.velocity_lc);
+    ::pickle(s, o.size);
     pickle(s, o.shield_time);
     pickle(s, o.race_result);
     pickle(s, o.jumping);
@@ -748,7 +780,7 @@ void unpickle(std::istream & s, PyKart * o) {
 }
 void pickle(std::ostream & s, const PyItem & o) {
     pickle(s, o.id);
-    pickle(s, o.location);
+    ::pickle(s, o.location);
     pickle(s, o.size);
     pickle(s, o.type);
 }
@@ -760,7 +792,7 @@ void unpickle(std::istream & s, PyItem * o) {
 }
 void pickle(std::ostream & s, const PySoccerBall & o) {
     pickle(s, o.id);
-    pickle(s, o.location);
+    ::pickle(s, o.location);
     pickle(s, o.size);
 }
 void unpickle(std::istream & s, PySoccerBall * o) {
