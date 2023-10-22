@@ -2,6 +2,11 @@
 
 This file documents notable changes to PySTK2 across versions since its inception.
 
+## Version 0.3.1
+
+- Bug fix (crash with some races)
+- List tracks with a given mode
+
 ## Version 0.3.0
 
 - Fix bug when the controlled kart is not the first

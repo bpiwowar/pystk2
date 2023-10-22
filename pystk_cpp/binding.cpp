@@ -273,7 +273,8 @@ PYBIND11_MODULE(pystk2, m) {
         .def_property_readonly("config", &PySTKRace::config,"The current race configuration");
     }
     
-    m.def("list_tracks", &PySTKRace::listTracks, "Return a list of track names (possible values for RaceConfig.track)");
+    m.def("list_tracks", (std::vector<std::string> (*)())&PySTKRace::listTracks, "Return a list of track names (possible values for RaceConfig.track)");
+    m.def("list_tracks", (std::vector<std::string> (*)(PySTKRaceConfig::RaceMode))&PySTKRace::listTracks, "Return a list of track names (possible values for RaceConfig.track)");
     m.def("list_karts", &PySTKRace::listKarts, "Return a list of karts to play as (possible values for PlayerConfig.kart");
     
     // Initialize SuperTuxKart

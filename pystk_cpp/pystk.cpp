@@ -272,6 +272,30 @@ std::vector<std::string> PySTKRace::listTracks() {
         return track_manager->getAllTrackIdentifiers();
     return std::vector<std::string>();
 }
+std::vector<std::string> PySTKRace::listTracks(PySTKRaceConfig::RaceMode mode) {
+    std::vector<std::string> tracks;
+    if (track_manager) 
+    {
+        for(size_t i = 0; i < track_manager->getNumberOfTracks(); ++i) 
+        {
+            auto track = track_manager->getTrack(i);
+            bool include = false;
+            switch (mode) 
+            {
+                case PySTKRaceConfig::RaceMode::NORMAL_RACE:
+                    include = track->isRaceTrack();
+                    break;
+                default:
+                    throw std::invalid_argument("Unhandled mode");
+            }
+            if (include)
+            {
+                tracks.push_back(track->getIdent());
+            }
+        }
+    }
+    return tracks;
+}
 std::vector<std::string> PySTKRace::listKarts() {
     if (kart_properties_manager)
         return kart_properties_manager->getAllAvailableKarts();
@@ -503,7 +527,7 @@ bool PySTKRace::step() {
         irr_driver->update(dt);
         render(dt);
     } else {
-        World::getWorld()->updateGraphics(dt);
+        // World::getWorld()->updateGraphics(dt);
     }
 
     if (PyGlobalEnvironment::graphics_config().render && !irr_driver->getDevice()->run())

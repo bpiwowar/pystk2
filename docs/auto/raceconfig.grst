@@ -87,7 +87,19 @@
       Track name
 
 
-.. py:function:: pystk2.list_tracks () -> List[str]
+.. py:function:: pystk2.list_tracks (*args, **kwargs)
+
+   Overloaded function.
+
+
+   * list_tracks() -> List[str]
+
+
+   Return a list of track names (possible values for RaceConfig.track)
+
+
+   * list_tracks(arg0: pystk2.RaceConfig.RaceMode) -> List[str]
+
 
    Return a list of track names (possible values for RaceConfig.track)
 

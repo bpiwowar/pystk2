@@ -111,6 +111,7 @@ public: // Static methods
 	static PySTKRace * running_kart;
 	static bool isRunning();
 	static std::vector<std::string> listTracks();
+	static std::vector<std::string> listTracks(PySTKRaceConfig::RaceMode);
 	static std::vector<std::string> listKarts();
 
 protected:
