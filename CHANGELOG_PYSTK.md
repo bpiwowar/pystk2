@@ -2,6 +2,10 @@
 
 This file documents notable changes to PySTK2 across versions since its inception.
 
+## Version 0.3.2
+
+- Fix bug when no player exists (i.e. supertuxkart has never been launched)
+
 ## Version 0.3.1
 
 - Bug fix (crash with some races)

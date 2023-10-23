@@ -935,8 +935,13 @@ void PyGlobalEnvironment::load() {
     attachment_manager->loadModels();
     file_manager->popTextureSearchPath();
 
-    // Create first player and associate player with keyboard
-    auto profile = PlayerManager::get()->getPlayer(0);
+
+    // create a player if we have none
+    auto player_manager = PlayerManager::get();
+    player_manager->enforceCurrentPlayer();
+
+    // Create first player and associate input device
+    auto profile = player_manager->getPlayer(0);
     StateManager::get()->createActivePlayer(
         profile, FakeInputDevice::instance()
     );
