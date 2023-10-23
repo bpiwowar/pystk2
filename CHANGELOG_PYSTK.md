@@ -4,6 +4,7 @@ This file documents notable changes to PySTK2 across versions since its inceptio
 
 ## Version 0.3.2
 
+- New kart information: skidding factor
 - Fix bug when no player exists (i.e. supertuxkart has never been launched)
 
 ## Version 0.3.1

@@ -6,6 +6,7 @@
 
 #include "config/stk_config.hpp"
 #include "graphics/camera.hpp"
+#include "karts/skidding.hpp"
 #include "karts/abstract_kart.hpp"
 #include "karts/controller/controller.hpp"
 #include "karts/controller/local_player_controller.hpp"
@@ -272,6 +273,7 @@ struct PyKart {
 	float distance_down_track = 0;
 	float max_steer_angle = 0;
 	float wheel_base = 0;
+	float skeed_factor = 0;
 	int lives = 0;
 	
 	PyAttachment attachment;
@@ -300,6 +302,7 @@ struct PyKart {
 		  R(overall_distance, "Overall distance traveled")
 		  R(distance_down_track, "Distance traveled on current lap")
 		  R(finish_time, "Time to complete race")
+		  R(skeed_factor, "Skid factor")
 		  R(attachment, "Attachment of kart")
 		  R(powerup, "Powerup collected")
 		  R(max_steer_angle, "Maximum steering angle (depends on speed)")
@@ -334,6 +337,7 @@ struct PyKart {
 			max_steer_angle = k->getMaxSteerAngle();
 			wheel_base = k->getKartProperties()->getWheelBase();
 			finish_time = k->getFinishTime();
+			skeed_factor = k->getSkidding()->getSkidFactor();
 		}
 	}
 };
@@ -754,6 +758,7 @@ void pickle(std::ostream & s, const PyKart & o) {
     pickle(s, o.attachment);
     pickle(s, o.powerup);
     pickle(s, o.lives);
+    pickle(s, o.skeed_factor);
 }
 void unpickle(std::istream & s, PyKart * o) {
     unpickle(s, &o->id);
@@ -763,6 +768,7 @@ void unpickle(std::istream & s, PyKart * o) {
     unpickle(s, &o->rotation);
     unpickle(s, &o->front);
     unpickle(s, &o->velocity);
+    unpickle(s, &o->velocity_lc);
     unpickle(s, &o->size);
     unpickle(s, &o->shield_time);
     unpickle(s, &o->race_result);
@@ -777,6 +783,7 @@ void unpickle(std::istream & s, PyKart * o) {
     unpickle(s, &o->attachment);
     unpickle(s, &o->powerup);
     unpickle(s, &o->lives);
+    unpickle(s, &o->skeed_factor);
 }
 void pickle(std::ostream & s, const PyItem & o) {
     pickle(s, o.id);
