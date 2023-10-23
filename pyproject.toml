@@ -22,8 +22,11 @@ classifiers = [
 ]
 
 dependencies = [
+  # To deal with observations
+  "numpy",
+  # Automatic download of resources
   "platformdirs",
-  "numpy"
+  "requests"
 ]
 
 [project.urls]
