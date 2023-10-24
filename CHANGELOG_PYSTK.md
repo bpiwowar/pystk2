@@ -2,6 +2,10 @@
 
 This file documents notable changes to PySTK2 across versions since its inception.
 
+## Version 0.3.3
+
+- feature: get the action of a given kart
+
 ## Version 0.3.2
 
 - New kart information: skidding factor

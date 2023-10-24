@@ -261,6 +261,7 @@ PYBIND11_MODULE(pystk2, m) {
         .def(py::init<const PySTKRaceConfig &>(),py::arg("config"))
         .def("restart", &PySTKRace::restart,"Restart the current track. Use this function if the race config does not change, instead of creating a new SuperTuxKart object")
         .def("start", &PySTKRace::start,"start the race")
+        .def("get_kart_action", &PySTKRace::getKartAction, "Get a kart control state")
         .def("step", (bool (PySTKRace::*)(const std::vector<PySTKAction> &)) &PySTKRace::step, py::arg("action"), "Take a step with an action per agent")
         .def("step", (bool (PySTKRace::*)(const PySTKAction &)) &PySTKRace::step, py::arg("action"), "Take a step with an action for agent 0")
         .def("step", (bool (PySTKRace::*)()) &PySTKRace::step, "Take a step without changing the action")

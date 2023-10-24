@@ -465,6 +465,17 @@ void PySTKRace::stop() {
         // World::getWorld()->update();
     }
 }
+
+PySTKAction PySTKRace::getKartAction(std::size_t kart_ix) {
+    PySTKAction action;
+
+    KartControl const & control = World::getWorld()->getPlayerKart(kart_ix)->getControls();
+    action.get(&control);
+
+    return action;
+}
+
+
 void PySTKRace::render(float dt) {
     World *world = World::getWorld();
 #ifndef SERVER_ONLY

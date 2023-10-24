@@ -140,4 +140,5 @@ public:
 	const std::vector<std::shared_ptr<PySTKRenderData> > & render_data() const { return render_data_; }
 #endif  // SERVER_ONLY
 	const PySTKRaceConfig & config() const { return config_; }
+	PySTKAction getKartAction(std::size_t);
 };
