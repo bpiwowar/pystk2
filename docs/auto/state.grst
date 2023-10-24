@@ -375,6 +375,12 @@
       Width, height and length of kart
 
 
+   .. py:property:: skeed_factor () -> float
+      :annotation: property
+
+      Skid factor
+
+
    .. py:property:: speed () -> float
       :annotation: property
 

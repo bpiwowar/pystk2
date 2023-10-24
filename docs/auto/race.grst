@@ -6,6 +6,11 @@
 
    .. py:method:: __init__ (self: pystk2.Race, config: pystk2.RaceConfig)
 
+   .. py:method:: get_kart_action (self: pystk2.Race, arg0: int) -> pystk2.Action
+
+      Get a kart control state
+
+
    .. py:method:: restart (self: pystk2.Race) -> None
 
       Restart the current track. Use this function if the race config does not change, instead of creating a new SuperTuxKart object
