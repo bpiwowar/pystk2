@@ -4,7 +4,7 @@ This file documents notable changes to PySTK2 across versions since its inceptio
 
 ## Version 0.3.4
 
-- More flexible camera setup
+- More flexible camera
 - Collected kart energy
 - Position of the kart in the race
 
