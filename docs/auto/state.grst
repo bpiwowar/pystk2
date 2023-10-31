@@ -273,6 +273,12 @@
       Distance traveled on current lap
 
 
+   .. py:property:: energy () -> float
+      :annotation: property
+
+      Remaining collected energy
+
+
    .. py:property:: finish_time () -> float
       :annotation: property
 
@@ -343,6 +349,12 @@
       :annotation: property
 
       Player id
+
+
+   .. py:property:: position () -> int
+      :annotation: property
+
+      Current position of this kart in the race
 
 
    .. py:property:: powerup () -> pystk2.Powerup

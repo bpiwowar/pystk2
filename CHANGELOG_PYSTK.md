@@ -2,6 +2,11 @@
 
 This file documents notable changes to PySTK2 across versions since its inception.
 
+## Version 0.3.4
+
+- Collected kart energy
+- Position of the kart in the race
+
 ## Version 0.3.3
 
 - feature: get the action of a given kart

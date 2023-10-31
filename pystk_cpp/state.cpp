@@ -271,6 +271,8 @@ struct PyKart {
 	float finish_time = 0;
 	float overall_distance = 0;
 	float distance_down_track = 0;
+	int position = 0;
+	float energy = 0;
 	float max_steer_angle = 0;
 	float wheel_base = 0;
 	float skeed_factor = 0;
@@ -301,6 +303,8 @@ struct PyKart {
 		  R(finished_laps, "Number of laps completed")
 		  R(overall_distance, "Overall distance traveled")
 		  R(distance_down_track, "Distance traveled on current lap")
+		  R(position, "Current position of this kart in the race")
+		  R(energy, "Remaining collected energy")
 		  R(finish_time, "Time to complete race")
 		  R(skeed_factor, "Skid factor")
 		  R(attachment, "Attachment of kart")
@@ -332,6 +336,8 @@ struct PyKart {
 			shield_time = k->getShieldTime();
 			race_result = k->getRaceResult();
 			jumping = k->isJumping();
+			position = k->getPosition();
+			energy = k->getEnergy();
 			attachment.update(k->getAttachment());
 			powerup.update(k->getPowerup());
 			max_steer_angle = k->getMaxSteerAngle();
@@ -748,6 +754,8 @@ void pickle(std::ostream & s, const PyKart & o) {
     pickle(s, o.shield_time);
     pickle(s, o.race_result);
     pickle(s, o.jumping);
+    pickle(s, o.position);
+    pickle(s, o.energy);
     pickle(s, o.finished_laps);
     pickle(s, o.lap_time);
     pickle(s, o.finish_time);
@@ -773,6 +781,8 @@ void unpickle(std::istream & s, PyKart * o) {
     unpickle(s, &o->shield_time);
     unpickle(s, &o->race_result);
     unpickle(s, &o->jumping);
+    unpickle(s, &o->position);
+    unpickle(s, &o->energy);
     unpickle(s, &o->finished_laps);
     unpickle(s, &o->lap_time);
     unpickle(s, &o->finish_time);
