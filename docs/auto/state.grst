@@ -297,6 +297,12 @@
       Front direction of kart 1/2 kart length forward from location
 
 
+   .. py:property:: has_finished_race () -> bool
+      :annotation: property
+
+      True if the kart has finished the race
+
+
    .. py:property:: id () -> int
       :annotation: property
 

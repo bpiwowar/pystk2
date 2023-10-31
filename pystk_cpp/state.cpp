@@ -277,6 +277,7 @@ struct PyKart {
 	float wheel_base = 0;
 	float skeed_factor = 0;
 	int lives = 0;
+	bool has_finished_race;
 	
 	PyAttachment attachment;
 	
@@ -306,6 +307,7 @@ struct PyKart {
 		  R(position, "Current position of this kart in the race")
 		  R(energy, "Remaining collected energy")
 		  R(finish_time, "Time to complete race")
+		  R(has_finished_race, "True if the kart has finished the race")
 		  R(skeed_factor, "Skid factor")
 		  R(attachment, "Attachment of kart")
 		  R(powerup, "Powerup collected")
@@ -343,6 +345,7 @@ struct PyKart {
 			max_steer_angle = k->getMaxSteerAngle();
 			wheel_base = k->getKartProperties()->getWheelBase();
 			finish_time = k->getFinishTime();
+			has_finished_race = k->hasFinishedRace();
 			skeed_factor = k->getSkidding()->getSkidFactor();
 		}
 	}
@@ -767,6 +770,7 @@ void pickle(std::ostream & s, const PyKart & o) {
     pickle(s, o.powerup);
     pickle(s, o.lives);
     pickle(s, o.skeed_factor);
+    pickle(s, o.has_finished_race);
 }
 void unpickle(std::istream & s, PyKart * o) {
     unpickle(s, &o->id);
@@ -794,6 +798,7 @@ void unpickle(std::istream & s, PyKart * o) {
     unpickle(s, &o->powerup);
     unpickle(s, &o->lives);
     unpickle(s, &o->skeed_factor);
+    unpickle(s, &o->has_finished_race);
 }
 void pickle(std::ostream & s, const PyItem & o) {
     pickle(s, o.id);

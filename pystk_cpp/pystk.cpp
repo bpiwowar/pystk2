@@ -403,7 +403,8 @@ void PySTKRace::start() {
 
         for(std::size_t ix = 0; ix < config_.players.size(); ++ix)
         {
-            if (config_.players[ix].controller == PySTKPlayerConfig::PLAYER_CONTROL) {
+            auto const & player = config_.players[ix];
+            if ((player.controller == PySTKPlayerConfig::PLAYER_CONTROL && player.cameraMode == PySTKPlayerConfig::AUTO) || (player.cameraMode == PySTKPlayerConfig::ON)) {
                 auto kart = World::getWorld()->getKart(ix);
                 
                 if (camera_ix == 0) {

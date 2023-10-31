@@ -4,6 +4,23 @@
    SuperTuxKart player configuration
 
 
+   .. py:class:: CameraMode
+
+      .. py:attribute:: AUTO
+         :annotation: = 0
+
+      .. py:attribute:: OFF
+         :annotation: = 2
+
+      .. py:attribute:: ON
+         :annotation: = 1
+
+      .. py:property:: name () -> str
+         :annotation: property
+
+      .. py:property:: value () -> int
+         :annotation: property
+
    .. py:class:: Controller
 
       .. py:attribute:: AI_CONTROL
@@ -17,6 +34,12 @@
 
       .. py:property:: value () -> int
          :annotation: property
+
+   .. py:property:: camera_mode () -> pystk2.PlayerConfig.CameraMode
+      :annotation: property
+
+      Sets the camera on or off. If auto, use a camera for PLAYER_CONTROL only.
+
 
    .. py:property:: controller () -> pystk2.PlayerConfig.Controller
       :annotation: property

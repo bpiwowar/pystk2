@@ -190,11 +190,16 @@ PYBIND11_MODULE(pystk2, m) {
         py::enum_<PySTKPlayerConfig::Controller>(cls, "Controller")
             .value("PLAYER_CONTROL", PySTKPlayerConfig::PLAYER_CONTROL)
             .value("AI_CONTROL", PySTKPlayerConfig::AI_CONTROL);
+        py::enum_<PySTKPlayerConfig::CameraMode>(cls, "CameraMode")
+            .value("AUTO", PySTKPlayerConfig::AUTO)
+            .value("ON", PySTKPlayerConfig::ON)
+            .value("OFF", PySTKPlayerConfig::OFF);
         
         cls
-        .def(py::init<const std::string&, PySTKPlayerConfig::Controller, int>(), py::arg("kart")="", py::arg("controller")=PySTKPlayerConfig::PLAYER_CONTROL, py::arg("team")=0)
+        .def(py::init<const std::string&, PySTKPlayerConfig::Controller, PySTKPlayerConfig::CameraMode, int>(), py::arg("kart")="", py::arg("controller")=PySTKPlayerConfig::PLAYER_CONTROL, py::arg("camera_mode")=PySTKPlayerConfig::AUTO, py::arg("team")=0)
         .def_readwrite("kart", &PySTKPlayerConfig::kart, "Kart type, see list_karts for a list of kart types" )
         .def_readwrite("controller", &PySTKPlayerConfig::controller, "Let the player (PLAYER_CONTROL) or AI (AI_CONTROL) drive. The AI ignores actions in step(action)." )
+        .def_readwrite("camera_mode", &PySTKPlayerConfig::cameraMode, "Sets the camera on or off. If auto, use a camera for PLAYER_CONTROL only." )
         .def_readwrite("team", &PySTKPlayerConfig::team, "Team of the player 0 or 1" );
         add_pickle(cls);
 

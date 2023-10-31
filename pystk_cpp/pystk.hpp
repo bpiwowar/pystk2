@@ -27,8 +27,14 @@ struct PySTKPlayerConfig {
 		PLAYER_CONTROL,
 		AI_CONTROL,
 	};
+	enum CameraMode: uint8_t {
+		AUTO,
+		ON,
+		OFF
+	};
 	std::string kart;
 	Controller controller;
+	CameraMode cameraMode = CameraMode::AUTO;
 	int team = 0;
 };
 struct PySTKRaceConfig {
