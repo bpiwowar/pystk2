@@ -958,6 +958,7 @@ void PyGlobalEnvironment::load() {
         profile, FakeInputDevice::instance()
     );
     profile->initRemainingData();
+    player_manager->setCurrentPlayer(profile);
 }
 
 
