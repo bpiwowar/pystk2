@@ -393,32 +393,45 @@ void PySTKRace::start() {
     race_manager->startNew(false);
 
     // Setup cameras for some players
-    if (!GUIEngine::isNoGraphics()) {
+    if (!GUIEngine::isNoGraphics()) 
+    {
         // Setup a camera on the first player if nothing else...
-        if (Camera::getNumCameras() == 0) {
+        if (Camera::getNumCameras() == 0) 
+        {
             Log::fatal("pystk", "a camera should be setup");
         }
 
         std::size_t camera_ix = 0;
 
-        for(std::size_t ix = 0; ix < config_.players.size(); ++ix)
+        if (config_.num_cameras > 0) 
         {
-            auto const & player = config_.players[ix];
-            if ((player.controller == PySTKPlayerConfig::PLAYER_CONTROL && player.cameraMode == PySTKPlayerConfig::AUTO) || (player.cameraMode == PySTKPlayerConfig::ON)) {
+            for(std::size_t ix = 0; ix < config_.num_cameras; ++ix)
+            {
                 auto kart = World::getWorld()->getKart(ix);
-                
-                if (camera_ix == 0) {
-                    Camera::getCamera(camera_ix)->setKart(kart);
-                } else {
-                    Camera *camera = Camera::createCamera(kart, camera_ix);
+                (ix == 0 ? Camera::getCamera(ix) : Camera::createCamera(kart, ix))->setKart(kart);
+            }
+        }
+        else 
+        {
+            for(std::size_t ix = 0; ix < config_.players.size(); ++ix)
+            {
+                auto const & player = config_.players[ix];
+                if ((player.controller == PySTKPlayerConfig::PLAYER_CONTROL && player.cameraMode == PySTKPlayerConfig::AUTO) || (player.cameraMode == PySTKPlayerConfig::ON)) {
+                    auto kart = World::getWorld()->getKart(ix);
+                    
+                    if (camera_ix == 0) {
+                        Camera::getCamera(camera_ix)->setKart(kart);
+                    } else {
+                        Camera::createCamera(kart, camera_ix);
+                    }
+                    ++camera_ix;
                 }
-                ++camera_ix;
             }
         }
     }
 
-    auto state_manager = StateManager::get();
-    auto player_manager = PlayerManager::get();
+    StateManager::get();
+    PlayerManager::get();
 
 
 // FIXME: put back graphics fetching for now
@@ -530,6 +543,21 @@ bool PySTKRace::step() {
         World::getWorld()->updateTime(1);
     }
     
+    // Update karts
+    if (config_.num_cameras > 0) {
+        World::KartList karts = World::getWorld()->getKarts();
+
+        std::sort(karts.begin(), karts.end(), [](auto const & a, auto const & b) {
+            return a->getPosition() < b->getPosition();
+        });
+        
+        for(std::size_t ix = 0; ix < config_.num_cameras; ++ix)
+        {
+            core::stringc name(karts[ix]->getName());
+            Camera::getCamera(ix)->setKart(karts[ix].get());
+        }
+    }
+
     PropertyAnimator::get()->update(dt);
     
     // Then render
@@ -596,7 +624,7 @@ void PySTKRace::setupConfig(const PySTKRaceConfig & config) {
             m_controlled.push_back(ix);
         }
     }
-    auto num_cameras = m_controlled.size();
+    auto num_cameras = config.num_cameras > 0 ? config.num_cameras : m_controlled.size();
 
     // Sets the total number of karts
     race_manager->setNumKarts(config.num_kart);

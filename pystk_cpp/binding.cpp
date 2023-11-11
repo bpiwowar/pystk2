@@ -228,7 +228,8 @@ PYBIND11_MODULE(pystk2, m) {
         .def_readwrite("laps", &PySTKRaceConfig::laps, "Number of laps the race runs for")
         .def_readwrite("seed", &PySTKRaceConfig::seed, "Random seed")
         .def_readwrite("num_kart", &PySTKRaceConfig::num_kart, "Total number of karts, fill the race with num_kart - len(players) AI karts")
-        .def_readwrite("step_size", &PySTKRaceConfig::step_size, "Game time between different step calls");
+        .def_readwrite("step_size", &PySTKRaceConfig::step_size, "Game time between different step calls")
+        .def_readwrite("num_cameras", &PySTKRaceConfig::num_cameras, "Number of cameras to follow the first karts (0 for none)");
         add_pickle(cls);
     }
 

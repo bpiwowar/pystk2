@@ -2,6 +2,10 @@
 
 This file documents notable changes to PySTK2 across versions since its inception.
 
+## Version 0.3.5
+
+- `num_cameras` can be used to setup cameras that follow the first karts
+
 ## Version 0.3.4
 
 - More flexible camera

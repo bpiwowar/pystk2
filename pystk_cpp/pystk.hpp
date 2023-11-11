@@ -57,6 +57,7 @@ struct PySTKRaceConfig {
 	int seed = 0;
 	int num_kart = 1;
 	float step_size = 0.1;
+	int num_cameras = 0;
 };
 
 class PySTKRenderTarget;
