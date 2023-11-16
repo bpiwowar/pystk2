@@ -464,6 +464,10 @@ void PySTKRace::start() {
                     World::getWorld()->loadAIController(kart)
                 )
             );                
+
+            Log::info("pystk", "Setting player name %d: %s", i, config_.players[i].name.c_str());
+            core::stringw player_name(config_.players[i].name.c_str());
+            kart->setOnScreenText(player_name);
         }
     }
     ItemManager::updateRandomSeed(config_.seed);
