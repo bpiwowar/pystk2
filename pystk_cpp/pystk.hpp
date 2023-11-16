@@ -33,6 +33,7 @@ struct PySTKPlayerConfig {
 		OFF
 	};
 	std::string kart;
+	std::string name;
 	Controller controller;
 	CameraMode cameraMode = CameraMode::AUTO;
 	int team = 0;
@@ -50,7 +51,7 @@ struct PySTKRaceConfig {
 	
 	int difficulty = 2;
 	RaceMode mode = NORMAL_RACE;
-	std::vector<PySTKPlayerConfig> players = {{"",PySTKPlayerConfig::PLAYER_CONTROL}};
+	std::vector<PySTKPlayerConfig> players = {{"","",PySTKPlayerConfig::PLAYER_CONTROL}};
 	std::string track;
 	bool reverse = false;
 	int laps = 3;

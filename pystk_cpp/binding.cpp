@@ -196,8 +196,9 @@ PYBIND11_MODULE(pystk2, m) {
             .value("OFF", PySTKPlayerConfig::OFF);
         
         cls
-        .def(py::init<const std::string&, PySTKPlayerConfig::Controller, PySTKPlayerConfig::CameraMode, int>(), py::arg("kart")="", py::arg("controller")=PySTKPlayerConfig::PLAYER_CONTROL, py::arg("camera_mode")=PySTKPlayerConfig::AUTO, py::arg("team")=0)
+        .def(py::init<const std::string&, const std::string&, PySTKPlayerConfig::Controller, PySTKPlayerConfig::CameraMode, int>(), py::arg("kart")="", py::arg("name")="", py::arg("controller")=PySTKPlayerConfig::PLAYER_CONTROL, py::arg("camera_mode")=PySTKPlayerConfig::AUTO, py::arg("team")=0)
         .def_readwrite("kart", &PySTKPlayerConfig::kart, "Kart type, see list_karts for a list of kart types" )
+        .def_readwrite("name", &PySTKPlayerConfig::kart, "Name of the player" )
         .def_readwrite("controller", &PySTKPlayerConfig::controller, "Let the player (PLAYER_CONTROL) or AI (AI_CONTROL) drive. The AI ignores actions in step(action)." )
         .def_readwrite("camera_mode", &PySTKPlayerConfig::cameraMode, "Sets the camera on or off. If auto, use a camera for PLAYER_CONTROL only." )
         .def_readwrite("team", &PySTKPlayerConfig::team, "Team of the player 0 or 1" );
@@ -219,7 +220,7 @@ PYBIND11_MODULE(pystk2, m) {
             .value("SOCCER", PySTKRaceConfig::RaceMode::SOCCER);
         
         cls
-        .def(py::init<int,PySTKRaceConfig::RaceMode,std::vector<PySTKPlayerConfig>,std::string,bool,int,int,int,float>(), py::arg("difficulty") = 2, py::arg("mode") = PySTKRaceConfig::NORMAL_RACE, py::arg("players") = std::vector<PySTKPlayerConfig>{{"",PySTKPlayerConfig::PLAYER_CONTROL}}, py::arg("track") = "", py::arg("reverse") = false, py::arg("laps") = 3, py::arg("seed") = 0, py::arg("num_kart") = 1, py::arg("step_size") = 0.1)
+        .def(py::init<int,PySTKRaceConfig::RaceMode,std::vector<PySTKPlayerConfig>,std::string,bool,int,int,int,float>(), py::arg("difficulty") = 2, py::arg("mode") = PySTKRaceConfig::NORMAL_RACE, py::arg("players") = std::vector<PySTKPlayerConfig>{{"","",PySTKPlayerConfig::PLAYER_CONTROL}}, py::arg("track") = "", py::arg("reverse") = false, py::arg("laps") = 3, py::arg("seed") = 0, py::arg("num_kart") = 1, py::arg("step_size") = 0.1)
         .def_readwrite("difficulty", &PySTKRaceConfig::difficulty, "Skill of AI players 0..2")
         .def_readwrite("mode", &PySTKRaceConfig::mode, "Specify the type of race")
         .def_readwrite("players", &PySTKRaceConfig::players, "List of all agent players")
