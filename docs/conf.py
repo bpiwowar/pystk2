@@ -24,7 +24,7 @@ copyright = '2023, Benjamin Piwowarski'
 author = 'Benjamin Piwowarski'
 
 # The short X.Y version
-version = '4'
+version = '0.3.7'
 
 # The full version, including alpha/beta/rc tags
 release = version

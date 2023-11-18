@@ -4,7 +4,7 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "PySuperTuxKart2"
-version = "0.3.6"
+version = "0.3.7"
 description="Python bindings for SuperTuxKart"
 readme = "README.md"
 authors = [

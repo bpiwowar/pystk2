@@ -2,6 +2,10 @@
 
 This file documents notable changes to PySTK2 across versions since its inception.
 
+## Version 0.3.7
+
+- Fix camera bugs
+
 ## Version 0.3.6
 
 - Name are displayed on top of the karts
