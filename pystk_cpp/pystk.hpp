@@ -123,6 +123,8 @@ public: // Static methods
 	static std::vector<std::string> listKarts();
 
 protected:
+	/// Returns true if the player camera is active
+	bool activePlayerCamera(size_t player_ix);
 	void setupConfig(const PySTKRaceConfig & config);
 	void setupRaceStart();
 	void render(float dt);

@@ -383,6 +383,11 @@ void PySTKRace::restart() {
     }
 }
 
+bool PySTKRace::activePlayerCamera(size_t player_ix) {
+    auto const & player = config_.players[player_ix];
+    return (player.controller == PySTKPlayerConfig::PLAYER_CONTROL && player.cameraMode == PySTKPlayerConfig::AUTO) || (player.cameraMode == PySTKPlayerConfig::ON);
+}
+
 void PySTKRace::start() {
     auto race_manager = RaceManager::get();
     
@@ -405,6 +410,7 @@ void PySTKRace::start() {
 
         if (config_.num_cameras > 0) 
         {
+            Log::info("pystk", "Setting up %d cameras", config_.num_cameras);
             for(std::size_t ix = 0; ix < config_.num_cameras; ++ix)
             {
                 auto kart = World::getWorld()->getKart(ix);
@@ -415,10 +421,11 @@ void PySTKRace::start() {
         {
             for(std::size_t ix = 0; ix < config_.players.size(); ++ix)
             {
-                auto const & player = config_.players[ix];
-                if ((player.controller == PySTKPlayerConfig::PLAYER_CONTROL && player.cameraMode == PySTKPlayerConfig::AUTO) || (player.cameraMode == PySTKPlayerConfig::ON)) {
+                if (activePlayerCamera(ix)) {
+
                     auto kart = World::getWorld()->getKart(ix);
-                    
+                    Log::info("pystk", "Setting up camera %d to follow kart %d", camera_ix+1, ix+1);
+
                     if (camera_ix == 0) {
                         Camera::getCamera(camera_ix)->setKart(kart);
                     } else {
@@ -466,9 +473,11 @@ void PySTKRace::start() {
             );                
 
             Log::info("pystk", "Setting player name %d: %s", i, config_.players[i].name.c_str());
-            core::stringw player_name(config_.players[i].name.c_str());
-            kart->setOnScreenText(player_name);
         }
+
+        // Setup player name
+        core::stringw player_name(config_.players[i].name.c_str());
+        kart->setOnScreenText(player_name);
     }
     ItemManager::updateRandomSeed(config_.seed);
     powerup_manager->setRandomSeed(config_.seed);
@@ -623,12 +632,19 @@ void PySTKRace::setupConfig(const PySTKRaceConfig & config) {
 
     // All karts are players
     m_controlled.clear();
+    size_t playerCameras = 0;
     for(size_t ix = 0; ix < config.players.size(); ++ix) {
-        if (config.players[ix].controller == PySTKPlayerConfig::PLAYER_CONTROL) {
+        if (activePlayerCamera(ix)) {
+            ++playerCameras;
+        }
+
+        if (config.players[ix].controller == PySTKPlayerConfig::PLAYER_CONTROL) 
+        {
             m_controlled.push_back(ix);
         }
     }
-    auto num_cameras = config.num_cameras > 0 ? config.num_cameras : m_controlled.size();
+
+    auto num_cameras = config.num_cameras > 0 ? config.num_cameras : playerCameras;
 
     // Sets the total number of karts
     race_manager->setNumKarts(config.num_kart);
