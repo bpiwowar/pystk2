@@ -53,6 +53,12 @@
       Kart type, see list_karts for a list of kart types
 
 
+   .. py:property:: name () -> str
+      :annotation: property
+
+      Name of the player
+
+
    .. py:property:: team () -> int
       :annotation: property
 

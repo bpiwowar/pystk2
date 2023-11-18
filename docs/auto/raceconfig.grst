@@ -51,6 +51,12 @@
       Specify the type of race
 
 
+   .. py:property:: num_cameras () -> int
+      :annotation: property
+
+      Number of cameras to follow the first karts (0 for none)
+
+
    .. py:property:: num_kart () -> int
       :annotation: property
 
