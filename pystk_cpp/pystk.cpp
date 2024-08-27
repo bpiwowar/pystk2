@@ -419,6 +419,7 @@ void PySTKRace::start() {
         }
         else 
         {
+            Log::info("pystk", "Setting up player cameras", config_.players.size());
             for(std::size_t ix = 0; ix < config_.players.size(); ++ix)
             {
                 if (activePlayerCamera(ix)) {
@@ -472,10 +473,10 @@ void PySTKRace::start() {
                 )
             );                
 
-            Log::info("pystk", "Setting player name %d: %s", i, config_.players[i].name.c_str());
         }
 
         // Setup player name
+        Log::info("pystk", "Setting player name %d: %s", i, config_.players[i].name.c_str());
         core::stringw player_name(config_.players[i].name.c_str());
         kart->setOnScreenText(player_name);
     }

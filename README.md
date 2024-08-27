@@ -52,10 +52,8 @@ To visualize the races (not mandatory), make sure that you computer's specificat
 
 The software is released under the GNU General Public License (GPL) which can be found in the file [`COPYING`](/COPYING) in the same directory as this file.
 
-<!-- 
----
-
 ## 3D coordinates
+
 A reminder for those who are looking at the code and 3D models:
 
 SuperTuxKart: X right, Y up, Z forwards
@@ -63,8 +61,19 @@ SuperTuxKart: X right, Y up, Z forwards
 Blender: X right, Y forwards, Z up
 
 The export utilities  perform the needed transformation, so in Blender you just work with the XY plane as ground, and things will appear fine in STK (using XZ as ground in the code, obviously). 
--->
+
 
 ## Building from source
 
 Building instructions can be found in [`INSTALL.md`](/INSTALL.md)
+
+## Python bindings
+
+- `pystk.[hc]pp`: manage races
+- `state.[hc]pp`: observable and actions
+- `pyckle.[hc]pp`: pickly states
+- `fake_input_device.[hc]pp`: a fake input device used to control players
+- `utils.[hc]pp`, `views.hpp`
+- `buffer.[hc]pp`
+
+`PYSTK_LOG_LEVEL` can control the log level (`debug`, `verbose`, `info`, `warn`, `error`, `fatal`)
