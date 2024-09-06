@@ -39,28 +39,13 @@ jobs:
       - uses: actions/checkout@v3
       - name: Install cibuildwheel
         run: pipx install cibuildwheel==2.20.0
+      # Use macos-13 
       - id: set-matrix
         run: |
           MATRIX=$(
-            {
-              cibuildwheel --print-build-identifiers --platform linux \
-              | egrep -v "(^pp|musl)" \
-              | jq -nRc '{"only": inputs, "os": "ubuntu-latest"}' \
-              && cibuildwheel --print-build-identifiers --platform macos \
-              | egrep -v "(^pp)" \
-              | jq -nRc '{"only": inputs, "os": "macos-latest"}' \
-              && cibuildwheel --print-build-identifiers --platform windows \
-              | jq -nRc '{"only": inputs, "os": "windows-latest"}'
-            } | jq -sc
+            for p in "macos arm64 macos-latest" "macos x86_64 macos-latest" "linux x86_64 ubuntu-latest" "windows AMD64 windows-latest"; do set -- $p; cibuildwheel --print-build-identifiers --platform $1 --arch $2 | egrep -v "(^pp|musl)" | jq -nRc '{"only": inputs, "os": "'$3'", "arch": "'$2'" }'; done | jq -sc
           )
           echo "include=$MATRIX" >> $GITHUB_OUTPUT          
-    env:
-      # -- Specifies the architectures
-      CIBW_ARCHS_LINUX: x86_64
-      # Do not use universal2 anymore
-      CIBW_ARCHS_MACOS: arm64 x86_64
-      CIBW_ARCHS_WINDOWS: AMD64
-
 
   build_wheels:
     name: Build ${{ matrix.only }}
@@ -78,6 +63,8 @@ jobs:
       with:
         only: ${{ matrix.only }}
       env:
+        CIBW_ARCHS: ${{ matrix.arch }}
+
         # Download dependencies for manylinux (CentOS 7)
         CIBW_BEFORE_ALL_LINUX: |
           yum -y install cmake bluez-libs-devel openssl-devel libcurl-devel freetype-devel harfbuzz-devel libjpeg-turbo-devel libogg-devel libpng-devel libvorbis-devel openal-soft-devel SDL2-devel
