@@ -490,6 +490,7 @@ if (NOT SERVER_ONLY)
     find_package(Freetype)
     if(FREETYPE_FOUND)
         include_directories(${FREETYPE_INCLUDE_DIRS})
+        MESSAGE(STATUS "Use freetype: ${FREETYPE_LIBRARY}")
     else()
         message(FATAL_ERROR "Freetype not found. "
             "Freetype is required to display characters in SuperTuxKart.")
