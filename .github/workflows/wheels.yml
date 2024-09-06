@@ -43,7 +43,7 @@ jobs:
       - id: set-matrix
         run: |
           MATRIX=$(
-            for p in "macos arm64 macos-latest" "macos x86_64 macos-latest" "linux x86_64 ubuntu-latest" "windows AMD64 windows-latest"; do set -- $p; cibuildwheel --print-build-identifiers --platform $1 --arch $2 | egrep -v "(^pp|musl)" | jq -nRc '{"only": inputs, "os": "'$3'", "arch": "'$2'" }'; done | jq -sc
+            for p in "macos universal2 macos-13" "linux x86_64 ubuntu-latest" "windows AMD64 windows-latest"; do set -- $p; cibuildwheel --print-build-identifiers --platform $1 --arch $2 | egrep -v "(^pp|musl)" | jq -nRc '{"only": inputs, "os": "'$3'", "arch": "'$2'" }'; done | jq -sc
           )
           echo "include=$MATRIX" >> $GITHUB_OUTPUT          
 
@@ -63,8 +63,6 @@ jobs:
       with:
         only: ${{ matrix.only }}
       env:
-        CIBW_ARCHS: ${{ matrix.arch }}
-
         # Download dependencies for manylinux (CentOS 7)
         CIBW_BEFORE_ALL_LINUX: |
           yum -y install cmake bluez-libs-devel openssl-devel libcurl-devel freetype-devel harfbuzz-devel libjpeg-turbo-devel libogg-devel libpng-devel libvorbis-devel openal-soft-devel SDL2-devel
