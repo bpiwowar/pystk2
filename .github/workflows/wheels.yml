@@ -57,9 +57,12 @@ jobs:
           yum -y install cmake bluez-libs-devel openssl-devel libcurl-devel freetype-devel harfbuzz-devel libjpeg-turbo-devel libogg-devel libpng-devel libvorbis-devel openal-soft-devel SDL2-devel
 
         # Download dependencies for MacOS
+        # ... and try to get rid of Mono
         CIBW_BEFORE_ALL_MACOS: |
           curl  -L  "https://github.com/supertuxkart/dependencies/releases/download/1.4/dependencies-macosx.tar.xz"  | tar -xv
-        # ... and use the path dependency libraries when delocating
+          sudo rm -rf /Library/Frameworks/Mono.framework
+        
+          # ... and use the path dependency libraries when delocating
         CIBW_REPAIR_WHEEL_COMMAND_MACOS: >
           DYLD_LIBRARY_PATH=$(pwd)/dependencies-macosx/lib delocate-wheel --require-archs {delocate_archs} -w {dest_dir} -v {wheel}
         
