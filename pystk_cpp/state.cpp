@@ -604,6 +604,7 @@ struct PyWorldState {
 	std::vector<std::shared_ptr<PyKart> > karts;
 	std::vector<std::shared_ptr<PyItem> > items;
 	float time = 0;
+	int aux_ticks = 0;
 	std::shared_ptr<PySoccer> soccer;
 	std::shared_ptr<PyFFA> ffa;
 	WorldStatus::Phase phase = WorldStatus::Phase::SETUP_PHASE;
@@ -634,6 +635,7 @@ struct PyWorldState {
 		  R(karts, "State of karts")
 		  R(items, "State of items")
 		  R(time, "Game time")
+		  R(aux_ticks, "Ticks since ready")
 		  R(soccer, "Soccer match info")
 		  R(ffa, "Free for all match info")
 #undef R
@@ -684,6 +686,7 @@ struct PyWorldState {
 			}
 			players.resize(pid);
 			assignPlayersKart();
+			aux_ticks = w->getAuxiliaryTicks();
 			time = w->getTime();
 			phase = w->getPhase();
 

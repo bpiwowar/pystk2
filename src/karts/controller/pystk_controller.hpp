@@ -12,6 +12,10 @@ class PySTKController : public Controller
 {
     /** Stores the active player data structure. */
     StateManager::ActivePlayer *m_player;
+
+    /** True if the race has started */
+    bool           m_has_started;
+
 public:
     PySTKController(AbstractKart *kart, const int local_player_id);
 

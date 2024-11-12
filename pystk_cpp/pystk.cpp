@@ -531,8 +531,15 @@ bool PySTKRace::step(const std::vector<PySTKAction> & a) {
 
     for(int i=0; i<a.size(); i++) {
         auto ix = m_controlled[i];
-        KartControl & control = World::getWorld()->getPlayerKart(ix)->getControls();
+        auto *kart = World::getWorld()->getPlayerKart(ix);
+        KartControl & control = kart->getControls();
         a[i].set(&control);
+
+        // Uses acceleration for the startup boost
+        if (a[i].acceleration > 0) 
+        {
+            kart->getController()->action(PA_ACCEL, a[i].acceleration, false);
+        }
     }
     return step();
 }
