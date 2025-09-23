@@ -49,8 +49,8 @@ cachedir = Path(user_cache_dir("PySuperTuxKart2", "bpiwowar"))
 
 cachedir.mkdir(parents=True, exist_ok=True)
 
-VERSION = "1.4"
-FILENAME = f"SuperTuxKart-{VERSION}-src.tar.xz"
+VERSION = "1.5-rc2"
+FILENAME = f"SuperTuxKart-{VERSION}-src.tar.gz"
 SUPERTUXKART_URL = f"https://github.com/supertuxkart/stk-code/releases/download/{VERSION}/{FILENAME}"
 
 ASSETS_DIR= cachedir / VERSION
@@ -81,7 +81,7 @@ if not DOWNLOADED_FILE.is_file():
     # Decompress
     sys.stderr.write(f"Extracting data from {ASSETS_ARCHIVE}\n")
     ASSETS_DIR.mkdir(exist_ok=True)
-    with TarFile.open(ASSETS_ARCHIVE, "r:xz") as tf:
+    with TarFile.open(ASSETS_ARCHIVE, "r:gz") as tf:
         while tf_info := tf.next():
             tf_path = Path(tf_info.name)
             parents = list(tf_path.parents)

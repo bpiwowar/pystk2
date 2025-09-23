@@ -27,6 +27,7 @@
 #include "tracks/check_goal.hpp"
 #include "tracks/check_manager.hpp"
 #include "tracks/track.hpp"
+#include "tracks/track_sector.hpp"
 #include "utils/vec3.hpp"
 #include "view.hpp"
 #include "pickle.hpp"
@@ -278,6 +279,8 @@ struct PyKart {
 	float skeed_factor = 0;
 	int lives = 0;
 	bool has_finished_race;
+	int node = 0;
+	bool is_on_road;
 	
 	PyAttachment attachment;
 	
@@ -314,6 +317,8 @@ struct PyKart {
 		  R(max_steer_angle, "Maximum steering angle (depends on speed)")
 		  R(wheel_base, "Wheel base (distance front to rear axis)")
 		  R(lives, "Lives in three strikes battle")
+		  R(node, "Closest node")
+		  R(is_on_road, "Whether the kart is on track")
 #undef R
 		 .def("__repr__", [](const PyKart &k) { return "<Kart id=" + std::to_string(k.id)+" player_id=" + std::to_string(k.player_id)+" name='"+k.name+"' ...>"; });
 		add_pickle(c);
@@ -323,11 +328,14 @@ struct PyKart {
 	}
 	void update(const AbstractKart * k) {
 		if (k) {
+			const WorldWithRank * w = dynamic_cast<WorldWithRank*>(World::getWorld());
+
 			// TODO: add skidding information
 			id = k->getWorldKartId();
 			speed = k->getSpeed();
 			name = k->getKartProperties()->getNonTranslatedName();
 			setVector(location, k->getXYZ());
+
 			// Sets the proper rotation so we can convert to the kart frame of reference
 			setVector(rotation, k->getRotation().inverse());
 			setVector(front, k->getFrontXYZ());
@@ -347,6 +355,10 @@ struct PyKart {
 			finish_time = k->getFinishTime();
 			has_finished_race = k->hasFinishedRace();
 			skeed_factor = k->getSkidding()->getSkidFactor();
+
+			auto sector = w->getTrackSector(id);
+			is_on_road = sector->isOnRoad();
+			node = sector->getCurrentGraphNode();
 		}
 	}
 };
