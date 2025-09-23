@@ -23,13 +23,14 @@
 #include "audio/sfx_manager.hpp"
 #include "config/user_config.hpp"
 #include "config/player_manager.hpp"
-#include "graphics/camera.hpp"
+#include "graphics/camera/camera.hpp"
 #include "guiengine/engine.hpp"
 #include "guiengine/modaldialog.hpp"
 #include "guiengine/message_queue.hpp"
 #include "guiengine/screen_keyboard.hpp"
 #include "input/device_manager.hpp"
 #include "input/input_device.hpp"
+#include "io/file_manager.hpp"
 #include "items/network_item_manager.hpp"
 #include "items/powerup_manager.hpp"
 #include "karts/abstract_kart.hpp"
@@ -462,10 +463,7 @@ void ClientLobby::update(int ticks)
 #else
                 name = _("Bot");
 #endif
-                if (i > 0)
-                {
-                    name += core::stringw(" ") + StringUtils::toWString(i);
-                }
+                name += core::stringw(" ") + StringUtils::toWString(i + 1);
             }
             rest->encodeString(name).
                 addFloat(player->getDefaultKartColor());
@@ -1689,6 +1687,7 @@ void ClientLobby::handleClientCommand(const std::string& cmd)
         AddonsPack::install(argv[1]);
     else if (argv[0] == "uninstalladdon" && argv.size() == 2)
         AddonsPack::uninstall(argv[1]);
+    // FIXME - this code duplicates functions that should be handled elsewhere.
     else if (argv[0] == "music" && argv.size() == 2)
     {
         int vol = atoi(argv[1].c_str());
@@ -1858,7 +1857,7 @@ void ClientLobby::handleClientCommand(const std::string& cmd)
     }
     else if (argv[0] == "opengl")
     {
-        UserConfigParams::m_render_driver = "gl";
+        UserConfigParams::m_render_driver = "opengl";
         user_config->saveConfig();
     }
     else if (argv[0] == "vulkan")

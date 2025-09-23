@@ -20,6 +20,8 @@
 // THE SOFTWARE.
 //
 
+#include <cstdio>
+
 #ifndef AMD_VULKAN_MEMORY_ALLOCATOR_H
 #define AMD_VULKAN_MEMORY_ALLOCATOR_H
 
@@ -2563,6 +2565,7 @@ VMA_CALL_PRE void VMA_CALL_POST vmaFreeStatsString(
 #undef VMA_IMPLEMENTATION
 
 #include <cstdint>
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <utility>

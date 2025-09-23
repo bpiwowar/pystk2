@@ -146,7 +146,7 @@ bool CGUIScrollBar::OnEvent(const SEvent& event)
 					// thanks to tommi by tommi for another bugfix
 					// everybody needs a little thanking. hallo niko!;-)
 					setPos(	getPos() +
-							( (event.MouseInput.Wheel < 0 ? -1 : 1) * SmallStep * (Horizontal ? 1 : -1 ) )
+							( event.MouseInput.Wheel * SmallStep * (Horizontal ? 1 : -1 ) )
 							);
 
 					SEvent newEvent;
@@ -348,6 +348,9 @@ s32 CGUIScrollBar::getPosFromMousePos(const core::position2di &pos) const
 void CGUIScrollBar::setPos(s32 pos)
 {
 	Pos = core::s32_clamp ( pos, Min, Max );
+
+	if ( !core::isnotzero ( range() ) )
+		return;
 
 	if (Horizontal)
 	{

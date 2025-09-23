@@ -27,7 +27,7 @@
 #include "config/user_config.hpp"
 #include "font/bold_face.hpp"
 #include "font/font_manager.hpp"
-#include "graphics/camera.hpp"
+#include "graphics/camera/camera.hpp"
 #include "graphics/central_settings.hpp"
 #include "graphics/explosion.hpp"
 #include "graphics/irr_driver.hpp"
@@ -91,6 +91,7 @@
 #include "utils/vs.hpp"
 
 #include <ICameraSceneNode.h>
+#include <IDummyTransformationSceneNode.h>
 #include <ISceneManager.h>
 
 #include <algorithm> // for min and max
@@ -126,7 +127,9 @@ Kart::Kart (const std::string& ident, unsigned int world_kart_id,
     m_initial_position     = position;
     m_race_result          = false;
     m_wheel_box            = NULL;
+#ifndef SERVER_ONLY
     m_collision_particles  = NULL;
+#endif
     m_controller           = NULL;
     m_saved_controller     = NULL;
     m_consumption_per_tick = stk_config->ticks2Time(1) *
@@ -282,7 +285,9 @@ Kart::~Kart()
     m_nitro_sound ->deleteSFX();
     if(m_terrain_sound)          m_terrain_sound->deleteSFX();
     if(m_previous_terrain_sound) m_previous_terrain_sound->deleteSFX();
+#ifndef SERVER_ONLY
     if(m_collision_particles)    delete m_collision_particles;
+#endif
 
     if (m_wheel_box) m_wheel_box->remove();
 
@@ -854,14 +859,17 @@ bool Kart::isInRest() const
 }  // isInRest
 
 //-----------------------------------------------------------------------------
-/** Multiplies the velocity of the kart by a factor f (both linear
- *  and angular). This is used by anvils, which suddenly slow down the kart
- *  when they are attached.
+/** Multiplies the velocity of the kart by a factor f (both linear and angular).
+ * This is used by anchors, which suddenly slow down the kart when they are attached.
  */
 void Kart::adjustSpeed(float f)
 {
     m_body->setLinearVelocity(m_body->getLinearVelocity()*f);
     m_body->setAngularVelocity(m_body->getAngularVelocity()*f);
+    // Avoid instant speed increase on the same frame ignoring the adjustment, see #5411
+    float new_min_speed = m_vehicle->getMinSpeed()*f;
+    m_vehicle->resetMinSpeed(); // setMinSpeed only update if the new one is greater... See btKart.hpp
+    m_vehicle->setMinSpeed(new_min_speed);
 }   // adjustSpeed
 
 //-----------------------------------------------------------------------------
@@ -1007,21 +1015,26 @@ void Kart::finishedRace(float time, bool from_server)
         RaceGUIBase* m = World::getWorld()->getRaceGUI();
         if (m)
         {
-            bool won_the_race = false, too_slow = false;
+            bool won_the_race = false, too_slow = false, one_kart = false;
             unsigned int win_position = 1;
 
             if (RaceManager::get()->getMinorMode() == RaceManager::MINOR_MODE_FOLLOW_LEADER)
                 win_position = 2;
 
+            // There is no win if there is no possibility of losing
+            if (RaceManager::get()->getNumberOfKarts() == 1)
+                one_kart = true;
+
             if ((getPosition() == (int)win_position &&
-                World::getWorld()->getNumKarts() > win_position) || RaceManager::get()->getNumberOfKarts() == 1)
+                World::getWorld()->getNumKarts() > win_position))
                 won_the_race = true;
 
             if (RaceManager::get()->hasTimeTarget() && m_finish_time > RaceManager::get()->getTimeTarget())
                 too_slow = true;
 
-            m->addMessage((too_slow     ? _("You were too slow!") :
-                           won_the_race ? _("You won the race!")  :
+            m->addMessage((too_slow     ? _("You were too slow!")     :
+                           one_kart     ? _("You finished the race!") :
+                           won_the_race ? _("You won the race!")      :
                                           _("You finished the race in rank %d!", getPosition())),
             this, 2.0f, video::SColor(255, 255, 255, 255), true, true, true);
         }
@@ -1365,8 +1378,9 @@ void Kart::update(int ticks)
 
     m_powerup->update(ticks);
 
-    // Reset any instant speed increase in the bullet kart
+    // Reset any instant speed increase or speed floor in the bullet kart
     m_vehicle->resetMaxSpeed();
+    m_vehicle->resetMinSpeed();
 
     if (m_bubblegum_ticks > 0)
         m_bubblegum_ticks -= ticks;
@@ -1997,7 +2011,8 @@ void Kart::handleMaterialSFX()
 
     bool m_schedule_pause = m_flying ||
                         dynamic_cast<RescueAnimation*>(getKartAnimation()) ||
-                        dynamic_cast<ExplosionAnimation*>(getKartAnimation());
+                        dynamic_cast<ExplosionAnimation*>(getKartAnimation()) ||
+                        World::getWorld()->getPhase() == World::IN_GAME_MENU_PHASE;
 
     // terrain sound is not necessarily a looping sound so check its status before
     // setting its speed, to avoid 'ressuscitating' sounds that had already stopped
@@ -2668,7 +2683,15 @@ void Kart::updateEngineSFX(float dt)
 {
     // Only update SFX during the last substep (otherwise too many SFX commands
     // in one frame), and if sfx are enabled
-    if(!m_engine_sound || !SFXManager::get()->sfxAllowed()  )
+    if(!SFXManager::get()->sfxAllowed())
+        return;
+    
+    if (m_skid_sound)
+        m_skid_sound->setPosition(getSmoothedXYZ());
+    if (m_nitro_sound)
+        m_nitro_sound->setPosition(getSmoothedXYZ());
+
+    if (!m_engine_sound)
         return;
 
     // when going faster, use higher pitch for engine
@@ -3006,13 +3029,13 @@ void Kart::loadData(RaceManager::KartType type, bool is_animated_model)
     m_skidmarks = nullptr;
     m_shadow = nullptr;
     if (!GUIEngine::isNoGraphics() &&
-        m_kart_properties->getSkidEnabled() && CVS->isGLSL())
+        m_kart_properties->getSkidEnabled())
     {
         m_skidmarks.reset(new SkidMarks(*this));
     }
 
     if (!GUIEngine::isNoGraphics() &&
-        CVS->isGLSL() && !CVS->isShadowEnabled() && m_kart_properties
+        (!CVS->isGLSL() || !CVS->isShadowEnabled()) && m_kart_properties
         ->getShadowMaterial()->getSamplerPath(0) != "unicolor_white")
     {
         m_shadow.reset(new Shadow(m_kart_properties->getShadowMaterial(),
@@ -3254,9 +3277,6 @@ void Kart::updateGraphics(float dt)
 
     for (int i = 0; i < EMITTER_COUNT; i++)
         m_emitters[i]->setPosition(getXYZ());
-    if (m_skid_sound)
-        m_skid_sound->setPosition(getSmoothedXYZ());
-    m_nitro_sound->setPosition(getSmoothedXYZ());
 
     m_attachment->updateGraphics(dt);
 
@@ -3276,7 +3296,10 @@ void Kart::updateGraphics(float dt)
     // Update particle effects (creation rate, and emitter size
     // depending on speed)
     m_kart_gfx->update(dt);
+
+#ifndef SERVER_ONLY
     if (m_collision_particles) m_collision_particles->update(dt);
+#endif
 
     // --------------------------------------------------------
     float nitro_frac = 0;

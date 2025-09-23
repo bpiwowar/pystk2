@@ -37,6 +37,14 @@ class Skybox;
 class SphericalHarmonics;
 class PostProcessing;
 
+namespace irr
+{
+    namespace video
+    {
+        class IImage;
+    }
+}
+
 class ShaderBasedRenderer: public AbstractRenderer
 {
 private:
@@ -115,7 +123,7 @@ public:
     PostProcessing* getPostProcessing() { return m_post_processing.get(); }
     void dumpRTT() { m_dump_rtt = true; }
     void createPostProcessing() OVERRIDE;
-
+    Skybox* getSkybox() const { return m_skybox; }
 };
 
 #endif   // !SERVER_ONLY

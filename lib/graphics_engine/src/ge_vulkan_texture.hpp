@@ -20,10 +20,13 @@ using namespace irr;
 namespace GE
 {
 class GEVulkanDriver;
+class GEVulkanDeferredFBO;
 class GEVulkanTexture : public video::ITexture
 {
 protected:
-    core::dimension2d<u32> m_size, m_orig_size, m_max_size;
+    friend class GEVulkanDeferredFBO;
+
+    core::dimension2d<u32> m_size, m_orig_size;
 
     std::function<void(video::IImage*)> m_image_mani;
 
@@ -38,6 +41,8 @@ protected:
     VmaAllocationInfo m_vma_info;
 
     std::shared_ptr<std::atomic<VkImageView> > m_image_view;
+
+    std::shared_ptr<std::atomic<VkImageView> > m_image_view_srgb;
 
     std::shared_ptr<std::atomic<VkImageView> > m_placeholder_view;
 
@@ -66,11 +71,25 @@ protected:
     GEVulkanDriver* m_vk;
 
     // ------------------------------------------------------------------------
+    VkFormat getSRGBformat(VkFormat format)
+    {
+        if (format == VK_FORMAT_R8G8B8A8_UNORM)
+            return VK_FORMAT_R8G8B8A8_SRGB;
+        else if (format == VK_FORMAT_ASTC_4x4_UNORM_BLOCK)
+            return VK_FORMAT_ASTC_4x4_SRGB_BLOCK;
+        else if (format == VK_FORMAT_BC7_UNORM_BLOCK)
+            return VK_FORMAT_BC7_SRGB_BLOCK;
+        else if (format == VK_FORMAT_BC3_UNORM_BLOCK)
+            return VK_FORMAT_BC3_SRGB_BLOCK;
+        return format;
+    }
+    // ------------------------------------------------------------------------
     bool createTextureImage(uint8_t* texture_data, bool generate_hq_mipmap);
     // ------------------------------------------------------------------------
     bool createImage(VkImageUsageFlags usage);
     // ------------------------------------------------------------------------
-    bool createImageView(VkImageAspectFlags aspect_flags);
+    bool createImageView(VkImageAspectFlags aspect_flags,
+                         bool create_srgb_view = true);
     // ------------------------------------------------------------------------
     void transitionImageLayout(VkCommandBuffer command_buffer,
                                VkImageLayout old_layout,
@@ -84,25 +103,19 @@ protected:
     // ------------------------------------------------------------------------
     void clearVulkanData();
     // ------------------------------------------------------------------------
-    void reloadInternal();
+    void reloadInternal(const core::dimension2du& max_size);
     // ------------------------------------------------------------------------
     void bgraConversion(uint8_t* img_data);
     // ------------------------------------------------------------------------
     uint8_t* getTextureData();
-    // ------------------------------------------------------------------------
-    unsigned getMipmapLevels() const
-    {
-        if (!m_has_mipmaps)
-            return 1;
-        return std::floor(std::log2(std::max(m_size.Width, m_size.Height))) + 1;
-    }
     // ------------------------------------------------------------------------
     bool isSingleChannel() const
                             { return m_internal_format == VK_FORMAT_R8_UNORM; }
     // ------------------------------------------------------------------------
     void setPlaceHolderView();
     // ------------------------------------------------------------------------
-    std::shared_ptr<std::atomic<VkImageView> > getImageViewLive() const;
+    std::shared_ptr<std::atomic<VkImageView> > getImageViewLive(
+                                                      bool srgb = false) const;
     // ------------------------------------------------------------------------
     bool waitImageView() const
     {
@@ -206,16 +219,20 @@ public:
     virtual void updateTexture(void* data, irr::video::ECOLOR_FORMAT format,
                                u32 w, u32 h, u32 x, u32 y);
     // ------------------------------------------------------------------------
-    virtual std::shared_ptr<std::atomic<VkImageView> > getImageView() const
+    virtual std::shared_ptr<std::atomic<VkImageView> > getImageView(
+                                                       bool srgb = false) const
     {
         if (!m_ondemand_load)
         {
             m_image_view_lock.lock();
             m_image_view_lock.unlock();
-            return m_image_view;
+            if (srgb && m_image_view_srgb)
+                return m_image_view_srgb;
+            else
+                return m_image_view;
         }
         else
-            return getImageViewLive();
+            return getImageViewLive(srgb);
     }
     // ------------------------------------------------------------------------
     virtual bool useOnDemandLoad() const            { return m_ondemand_load; }
@@ -223,6 +240,19 @@ public:
     virtual const io::path& getFullPath() const         { return m_full_path; }
     // ------------------------------------------------------------------------
     VkFormat getInternalFormat() const            { return m_internal_format; }
+    // ------------------------------------------------------------------------
+    VkImage getImage() const
+    {
+        waitImageView();
+        return m_image;
+    }
+    // ------------------------------------------------------------------------
+    unsigned getMipmapLevels() const
+    {
+        if (!m_has_mipmaps)
+            return 1;
+        return std::floor(std::log2(std::max(m_size.Width, m_size.Height))) + 1;
+    }
 };   // GEVulkanTexture
 
 }

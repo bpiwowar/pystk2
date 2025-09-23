@@ -35,6 +35,8 @@
 #include "utils/string_utils.hpp"
 #include "utils/translation.hpp"
 
+#include <IrrlichtDevice.h>
+
 #define INPUT_MODE_DEBUG 0
 
 static const char  INPUT_FILE_NAME[]  = "input.xml";
@@ -608,6 +610,24 @@ KeyboardDevice* DeviceManager::getKeyboardFromBtnID(const int button_id)
 
     return NULL;
 }   // getKeyboardFromButtonID
+
+// -----------------------------------------------------------------------------
+GamePadDevice* DeviceManager::getGamePad(const int i)
+{
+    if (i>= 0 && i < (int)m_gamepads.size())
+        return m_gamepads.get(i);
+    else
+        return NULL;
+}
+
+// -----------------------------------------------------------------------------
+KeyboardDevice* DeviceManager::getKeyboard(const int i)
+{
+    if (i >= 0 && i < (int)m_keyboards.size())
+        return m_keyboards.get(i);
+    else
+        return NULL;
+}
 
 // -----------------------------------------------------------------------------
 

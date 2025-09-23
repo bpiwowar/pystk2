@@ -27,7 +27,14 @@
 #include <limits>
 #include <set>
 #include <vector3d.h>
-#include <IAnimatedMeshSceneNode.h>
+
+namespace irr
+{
+    namespace scene
+    {
+        class IAnimatedMeshSceneNode;
+    }
+}
 
 using namespace irr;
 
@@ -91,7 +98,7 @@ public:
                      Attachment* attachment);
     virtual ~Swatter();
     void     updateGraphics(float dt) OVERRIDE;
-    bool     updateAndTestFinished(int ticks) OVERRIDE;
+    bool     updateAndTestFinished() OVERRIDE;
 
     // ------------------------------------------------------------------------
     /** Returns if the swatter is currently aiming, i.e. can be used to

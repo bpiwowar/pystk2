@@ -47,6 +47,7 @@
 #include <stdexcept>
 #include <string>
 
+#include <IFileSystem.h>
 #ifndef SERVER_ONLY
 #include <ge_main.hpp>
 #endif
@@ -129,18 +130,6 @@ if (!GUIEngine::isReallyNoGraphics()) {
             ShaderFilesManager::getInstance()->removeUnusedShaderFiles();
             SP::SPTextureManager::get()->removeUnusedTextures();
         }
-
-        if (GE::getDriver()->getDriverType() != video::EDT_VULKAN)
-            return;
-        auto& paths = GE::getGEConfig()->m_ondemand_load_texture_paths;
-        auto it = paths.begin();
-        while (it != paths.end())
-        {
-            if (StringUtils::startsWith(*it, m_root_absolute_path))
-                it = paths.erase(it);
-            else
-                it++;
-        }
     }
 }
 #endif
@@ -158,6 +147,11 @@ if (!GUIEngine::isReallyNoGraphics()) {
 void KartProperties::copyForPlayer(const KartProperties *source,
                                    HandicapLevel h)
 {
+    if (!source)
+    {
+        return;
+    }
+    
     *this = *source;
 
     // After the memcpy any pointers will be shared.
@@ -197,12 +191,14 @@ void KartProperties::copyFrom(const KartProperties *source)
 }   // copyFrom
 
 //-----------------------------------------------------------------------------
-void KartProperties::handleOnDemandLoadTexture()
+std::vector<std::string> KartProperties::handleOnDemandLoadTexture()
 {
+    std::vector<std::string> odt;
 #ifndef SERVER_ONLY
 if (!GUIEngine::isReallyNoGraphics()) {
     if (GE::getDriver()->getDriverType() != video::EDT_VULKAN)
-        return;
+        return odt;
+
     std::set<std::string> files;
     // Remove the last /
     m_root_absolute_path = StringUtils::getPath(m_root);
@@ -219,10 +215,14 @@ if (!GUIEngine::isReallyNoGraphics()) {
     {
         if (image_extensions.find(StringUtils::getExtension(f)) !=
             image_extensions.end())
+        {
             GE::getGEConfig()->m_ondemand_load_texture_paths.insert(f);
+            odt.push_back(f);
+        }
     }
 }
 #endif
+    return odt;
 }   // handleOnDemandLoadTexture
 
 //-----------------------------------------------------------------------------
@@ -269,7 +269,7 @@ void KartProperties::load(const std::string &filename, const std::string &node)
         m_is_addon = true;
     }
 
-    handleOnDemandLoadTexture();
+    std::vector<std::string> odt = handleOnDemandLoadTexture();
     try
     {
         if(!root || root->getName()!="kart")
@@ -388,6 +388,13 @@ if (!GUIEngine::isReallyNoGraphics()) {
     file_manager->popTextureSearchPath();
     file_manager->popModelSearchPath();
 
+#ifndef SERVER_ONLY
+    if (GE::getDriver()->getDriverType() == video::EDT_VULKAN)
+    {
+        for (auto& t : odt)
+            GE::getGEConfig()->m_ondemand_load_texture_paths.erase(t);
+    }
+#endif
 }   // load
 
 // ----------------------------------------------------------------------------
@@ -671,12 +678,18 @@ bool KartProperties::operator<(const KartProperties &other) const
     PlayerProfile *p = PlayerManager::getCurrentPlayer();
     bool this_is_locked = p->isLocked(getIdent());
     bool other_is_locked = p->isLocked(other.getIdent());
-    if (this_is_locked == other_is_locked)
+    bool this_is_favorite = p->isFavoriteKart(getIdent());
+    bool other_is_favorite = p->isFavoriteKart(other.getIdent());
+
+    if (this_is_locked != other_is_locked)
     {
-        return getName() < other.getName();
-    }
-    else
         return other_is_locked;
+    }
+    else if (this_is_favorite != other_is_favorite)
+    {
+        return this_is_favorite;
+    }
+    else return getName() < other.getName();
 
     return true;
 }  // operator<

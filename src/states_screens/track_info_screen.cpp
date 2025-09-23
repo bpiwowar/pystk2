@@ -21,6 +21,7 @@
 #include "challenges/unlock_manager.hpp"
 #include "config/player_manager.hpp"
 #include "config/user_config.hpp"
+#include "graphics/irr_driver.hpp"
 #include "graphics/material.hpp"
 #include "graphics/stk_tex_manager.hpp"
 #include "guiengine/CGUISpriteBank.hpp"
@@ -30,6 +31,7 @@
 #include "guiengine/widgets/check_box_widget.hpp"
 #include "guiengine/widgets/icon_button_widget.hpp"
 #include "guiengine/widgets/label_widget.hpp"
+#include "guiengine/widgets/list_widget.hpp"
 #include "guiengine/widgets/ribbon_widget.hpp"
 #include "guiengine/widgets/spinner_widget.hpp"
 #include "io/file_manager.hpp"
@@ -93,11 +95,7 @@ void TrackInfoScreen::loadedFromFile()
     m_icon_unknown_kart = m_icon_bank->addTextureAsSprite(kart_not_found);
 
     m_highscore_label = getWidget<LabelWidget>("highscores");
-
-    for (unsigned int i=0;i<HIGHSCORE_COUNT;i++)
-    {
-        m_highscore_entries = getWidget<ListWidget>("highscore_entries");
-    }
+    m_highscore_entries = getWidget<ListWidget>("highscore_entries");
     
     GUIEngine::IconButtonWidget* screenshot = getWidget<IconButtonWidget>("screenshot");
     screenshot->setFocusable(false);
@@ -137,7 +135,7 @@ void TrackInfoScreen::init()
 {
     m_record_this_race = false;
 
-    const int max_arena_players = m_track->getMaxArenaPlayers();
+    const int max_arena_players = std::min(m_track->getMaxArenaPlayers(), unsigned(stk_config->m_max_karts));
     const int local_players     = RaceManager::get()->getNumLocalPlayers();
     const bool has_laps         = RaceManager::get()->modeHasLaps();
     const bool has_highscores   = RaceManager::get()->modeHasHighscores();
@@ -343,13 +341,11 @@ void TrackInfoScreen::init()
 
     if (has_highscores)
     {
-        int icon_height = GUIEngine::getFontHeight();
-        int row_height = GUIEngine::getFontHeight() * 1.2f;
-                                                    
-        m_icon_bank->setScale(icon_height/128.0f);
+        m_icon_bank->setScale(1.0f / 128.0f);
         m_icon_bank->setTargetIconSize(128, 128);
-        m_highscore_entries->setIcons(m_icon_bank, (int)row_height);
+        m_highscore_entries->setIcons(m_icon_bank, 1.2f);
         m_highscore_entries->setVisible(has_highscores);
+        m_highscore_entries->setActive(false); // Improve keyboard navigation
 
         updateHighScores();
     } //has_highscores

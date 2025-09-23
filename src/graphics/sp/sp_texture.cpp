@@ -29,14 +29,20 @@
 #include "utils/log.hpp"
 #include "utils/string_utils.hpp"
 
-#if !(defined(SERVER_ONLY) || defined(MOBILE_STK))
+#include <IImageLoader.h>
+#include <IReadFile.h>
+#include <IVideoDriver.h>
+#include <IWriteFile.h>
+
+#if !defined(SERVER_ONLY)
+#include <ge_main.hpp>
 #include <squish.h>
 static_assert(squish::kColourClusterFit == (1 << 5), "Wrong header");
 static_assert(squish::kColourRangeFit == (1 << 6), "Wrong header");
 static_assert(squish::kColourIterativeClusterFit == (1 << 8), "Wrong header");
 #endif
 
-#if !(defined(SERVER_ONLY) || defined(MOBILE_STK))
+#if !defined(SERVER_ONLY)
 extern "C"
 {
     #include <mipmap/img.h>
@@ -46,50 +52,19 @@ extern "C"
 
 #include <numeric>
 
-#if !defined(MOBILE_STK)
 static const uint8_t CACHE_VERSION = 2;
-#endif
 
 namespace SP
 {
 // ----------------------------------------------------------------------------
 SPTexture::SPTexture(const std::string& path, Material* m, bool undo_srgb,
                      const std::string& container_id)
-         : m_path(path), m_width(0), m_height(0), m_material(m),
-           m_undo_srgb(undo_srgb)
+         : m_path(path), m_container_id(container_id), m_width(0), m_height(0),
+           m_material(m), m_undo_srgb(undo_srgb)
 {
 #ifndef SERVER_ONLY
     glGenTextures(1, &m_texture_name);
-
     createWhite(false/*private_init*/);
-
-    if (!CVS->isTextureCompressionEnabled() || container_id.empty())
-    {
-        return;
-    }
-
-    std::string cache_subdir = "hd";
-    if ((UserConfigParams::m_high_definition_textures & 0x01) == 0x01)
-    {
-        cache_subdir = "hd";
-    }
-    else
-    {
-        cache_subdir = StringUtils::insertValues("resized_%i",
-            (int)UserConfigParams::m_max_texture_size);
-    }
-    
-#ifdef USE_GLES2
-    if (m_undo_srgb && !CVS->isEXTTextureCompressionS3TCSRGBUsable())
-    {
-        cache_subdir += "-linear";
-    }
-#endif
-
-    m_cache_directory = file_manager->getCachedTexturesDir() +
-        cache_subdir + "/" + container_id;
-    file_manager->checkAndCreateDirectoryP(m_cache_directory);
-
 #endif
 }   // SPTexture
 
@@ -120,6 +95,36 @@ SPTexture::~SPTexture()
     }
 #endif
 }   // ~SPTexture
+
+// ----------------------------------------------------------------------------
+std::string SPTexture::getCacheDirectory()
+{
+    std::string cache_subdir = "hd";
+#ifndef SERVER_ONLY
+    if (!CVS->isTextureCompressionEnabled() || m_container_id.empty())
+        return "";
+
+    if ((UserConfigParams::m_high_definition_textures & 0x01) == 0x01)
+    {
+        cache_subdir = "hd";
+    }
+    else
+    {
+        cache_subdir = StringUtils::insertValues("resized_%i",
+            (int)UserConfigParams::m_max_texture_size);
+    }
+
+#ifdef USE_GLES2
+    if (m_undo_srgb && !CVS->isEXTTextureCompressionS3TCSRGBUsable())
+    {
+        cache_subdir += "-linear";
+    }
+#endif
+
+#endif
+    return file_manager->getCachedTexturesDir() +
+        cache_subdir + "/" + m_container_id;
+}   // getCacheDirectory
 
 // ----------------------------------------------------------------------------
 std::shared_ptr<video::IImage> SPTexture::getImageFromPath
@@ -200,7 +205,7 @@ std::shared_ptr<video::IImage> SPTexture::getTextureImage() const
         image->getDimension().Height; i++)
     {
         const bool use_tex_compress = CVS->isTextureCompressionEnabled() &&
-            !m_cache_directory.empty();
+            !m_container_id.empty();
 #ifndef USE_GLES2
         if (use_tex_compress)
         {
@@ -218,9 +223,9 @@ std::shared_ptr<video::IImage> SPTexture::getTextureImage() const
 
         if (m_undo_srgb && (!use_tex_compress || force_undo_srgb))
         {
-            data[i * 4] = srgb255ToLinear(data[i * 4]);
-            data[i * 4 + 1] = srgb255ToLinear(data[i * 4 + 1]);
-            data[i * 4 + 2] = srgb255ToLinear(data[i * 4 + 2]);
+            data[i * 4] = GE::srgb255ToLinear(data[i * 4]);
+            data[i * 4 + 1] = GE::srgb255ToLinear(data[i * 4 + 1]);
+            data[i * 4 + 2] = GE::srgb255ToLinear(data[i * 4 + 2]);
         }
     }
 #endif
@@ -233,7 +238,7 @@ bool SPTexture::compressedTexImage2d(std::shared_ptr<video::IImage> texture,
                                      <core::dimension2du, unsigned> >&
                                      mipmap_sizes)
 {
-#if !defined(SERVER_ONLY) && !defined(MOBILE_STK)
+#if !defined(SERVER_ONLY)
     unsigned format = GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
     if (m_undo_srgb && CVS->isEXTTextureCompressionS3TCSRGBUsable())
     {
@@ -331,7 +336,7 @@ bool SPTexture::saveCompressedTexture(std::shared_ptr<video::IImage> texture,
                                       <core::dimension2du, unsigned> >& sizes,
                                       const std::string& cache_location)
 {
-#if !defined(SERVER_ONLY) && !defined(MOBILE_STK)
+#if !defined(SERVER_ONLY)
     const unsigned total_size = std::accumulate(sizes.begin(), sizes.end(), 0,
         [] (const unsigned int previous, const std::pair
         <core::dimension2du, unsigned>& cur_sizes)
@@ -359,16 +364,15 @@ bool SPTexture::saveCompressedTexture(std::shared_ptr<video::IImage> texture,
 
 // ----------------------------------------------------------------------------
 bool SPTexture::useTextureCache(const std::string& full_path,
+                                const std::string& cache_directory,
                                 std::string* cache_loc)
 {
 #ifndef SERVER_ONLY
-    if (!CVS->isTextureCompressionEnabled() || m_cache_directory.empty())
-    {
+    if (cache_directory.empty())
         return false;
-    }
 
     std::string basename = StringUtils::getBasename(m_path);
-    *cache_loc = m_cache_directory + "/" + basename + ".sptz";
+    *cache_loc = cache_directory + "/" + basename + ".sptz";
 
     if (file_manager->fileExists(*cache_loc) &&
         file_manager->fileIsNewer(*cache_loc, m_path))
@@ -396,7 +400,7 @@ std::shared_ptr<video::IImage> SPTexture::getTextureCache(const std::string& p,
     std::vector<std::pair<core::dimension2du, unsigned> >* sizes)
 {
     std::shared_ptr<video::IImage> cache;
-#if !(defined(SERVER_ONLY) || defined(MOBILE_STK))
+#if !defined(SERVER_ONLY)
     io::IReadFile* file = irr::io::createReadFile(p.c_str());
     if (file == NULL)
     {
@@ -434,11 +438,11 @@ std::shared_ptr<video::IImage> SPTexture::getTextureCache(const std::string& p,
 }   // getTextureCache
 
 // ----------------------------------------------------------------------------
-bool SPTexture::threadedLoad()
+bool SPTexture::threadedLoad(const std::string& cache_directory)
 {
 #ifndef SERVER_ONLY
     std::string cache_loc;
-    if (useTextureCache(m_path, &cache_loc))
+    if (useTextureCache(m_path, cache_directory, &cache_loc))
     {
         std::vector<std::pair<core::dimension2du, unsigned> > sizes;
         std::shared_ptr<video::IImage> cache = getTextureCache(cache_loc,
@@ -467,7 +471,7 @@ bool SPTexture::threadedLoad()
     }
     std::shared_ptr<video::IImage> mipmaps;
 
-    if (!m_cache_directory.empty() && CVS->isTextureCompressionEnabled() &&
+    if (!cache_directory.empty() && CVS->isTextureCompressionEnabled() &&
         image->getDimension().Width >= 4 && image->getDimension().Height >= 4)
     {
         auto r = compressTexture(image);
@@ -486,7 +490,6 @@ bool SPTexture::threadedLoad()
     }
     else
     {
-#ifndef MOBILE_STK
         if (UserConfigParams::m_hq_mipmap && image->getDimension().Width > 1 &&
             image->getDimension().Height > 1)
         {
@@ -512,7 +515,6 @@ bool SPTexture::threadedLoad()
             generateHQMipmap(image->lock(), mipmap_sizes,
                 (uint8_t*)mipmaps->lock());
         }
-#endif
         SPTextureManager::get()->increaseGLCommandFunctionCount(1);
         SPTextureManager::get()->addGLCommandFunction(
             [this, image, mipmaps]()->bool
@@ -684,7 +686,7 @@ void SPTexture::generateHQMipmap(void* in,
                                  <core::dimension2du, unsigned> >& mms,
                                  uint8_t* out)
 {
-#if !(defined(SERVER_ONLY) || defined(MOBILE_STK))
+#if !defined(SERVER_ONLY)
     imMipmapCascade cascade;
     imReduceOptions options;
     imReduceSetOptions(&options,
@@ -721,7 +723,7 @@ std::vector<std::pair<core::dimension2du, unsigned> >
 {
     std::vector<std::pair<core::dimension2du, unsigned> > mipmap_sizes;
 
-#if !(defined(SERVER_ONLY) || defined(MOBILE_STK))
+#if !defined(SERVER_ONLY)
     unsigned width = image->getDimension().Width;
     unsigned height = image->getDimension().Height;
     mipmap_sizes.emplace_back(core::dimension2du(width, height), 0);

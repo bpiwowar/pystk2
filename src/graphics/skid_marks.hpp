@@ -20,7 +20,6 @@
 #ifndef HEADER_SKID_MARK_HPP
 #define HEADER_SKID_MARK_HPP
 
-#include <aabbox3d.h>
 #include <memory>
 #include <SColor.h>
 #include <vector>
@@ -33,6 +32,14 @@ namespace SP
 {
     class SPDynamicDrawCall;
     class SPShader;
+}
+
+namespace irr
+{
+    namespace scene
+    {
+        class IMeshSceneNode;
+    }
 }
 
 #include "utils/no_copy.hpp"
@@ -67,6 +74,7 @@ private:
     /** Shader(alphablend) to use for the skid marks. */
     std::shared_ptr<SP::SPShader> m_shader;
 
+    float m_dt;
     // ------------------------------------------------------------------------
     class SkidMarkQuads : public NoCopy
     {
@@ -85,12 +93,24 @@ private:
 
         std::shared_ptr<SP::SPDynamicDrawCall> m_dy_dc;
 
+        irr::scene::IMeshSceneNode* m_node;
+
+        void addSP        (const Vec3 &left,
+                           const Vec3 &right,
+                           const Vec3 &normal,
+                           float distance);
+
+        void addLegacy    (const Vec3 &left,
+                           const Vec3 &right,
+                           const Vec3 &normal,
+                           float distance);
     public:
             SkidMarkQuads (const Vec3 &left, const Vec3 &right,
                            const Vec3 &normal, Material* material,
                            std::shared_ptr<SP::SPShader> shader,
                            float z_offset, video::SColor* custom_color = NULL);
             ~SkidMarkQuads();
+
         void add          (const Vec3 &left,
                            const Vec3 &right,
                            const Vec3 &normal,

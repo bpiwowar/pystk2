@@ -19,6 +19,7 @@
 
             <div width="64%" height="100%" layout="vertical-row">
                 <div width="95%" align="center" layout="vertical-row" height="50%">
+                    <bubble id="info" width="100%" proportion="1" word_wrap="true"/>
                     <div width="100%" height="fit" layout="horizontal-row" >
                         <checkbox width="fit" id="record-race" I18N="Ghost replay info action" text_align="left"/>
                         <spacer width="1%"/>
@@ -38,18 +39,18 @@
 
                 <div width="95%" height="40%" align="center">
                     <buttonbar id="actions" x="0" y="0" height="100%" width="100%" align="center">
-                        <icon-button id="start" width="128" height="128"
-                                     icon="gui/icons/green_check.png"
-                                     I18N="Ghost replay info screen action" text="Start Race" word_wrap="true" />
-                        <icon-button id="add-ghost-to-compare" width="128" height="128"
-                                     icon="gui/icons/ghost_plus.png"
-                                     I18N="Ghost replay info screen action" text="Compare ghost" word_wrap="true" />
-                        <icon-button id="remove" width="128" height="128"
-                                     icon="gui/icons/remove.png"
-                                     I18N="Ghost replay info action" text="Remove" word_wrap="true" />
                         <icon-button id="back" width="128" height="128"
                                      icon="gui/icons/back.png"
                                      I18N="Ghost replay info action" text="Back" word_wrap="true" />
+                        <icon-button id="remove" width="128" height="128"
+                                     icon="gui/icons/remove.png"
+                                     I18N="Ghost replay info action" text="Remove" word_wrap="true" />
+                        <icon-button id="add-ghost-to-compare" width="128" height="128"
+                                     icon="gui/icons/ghost_plus.png"
+                                     I18N="Ghost replay info screen action" text="Compare ghost" word_wrap="true" />
+                        <icon-button id="start" width="128" height="128"
+                                     icon="gui/icons/green_check.png"
+                                     I18N="Ghost replay info screen action" text="Start Race" word_wrap="true" />
                     </buttonbar>
                 </div>
                 <spacer width="10" height="10%"/>

@@ -421,17 +421,20 @@ void LinearWorld::newLap(unsigned int kart_index)
         }
         if(!m_last_lap_sfx_played && lap_count > 1)
         {
-            if (UserConfigParams::m_music)
+            if (UserConfigParams::m_sfx)
             {
                 m_last_lap_sfx->play();
                 m_last_lap_sfx_played = true;
                 m_last_lap_sfx_playing = true;
 
-                // In case that no music is defined
-                if(music_manager->getCurrentMusic() &&
-                    music_manager->getMasterMusicVolume() > 0.2f)
+                // Temporarily reduce the volume of the main music
+                // So that the last lap SFX can be heard
+                if(UserConfigParams::m_music &&
+                    music_manager->getCurrentMusic())
                 {
-                    music_manager->setTemporaryVolume(0.2f);
+                    // The parameter taken by SetTemporaryVolume is a factor
+                    // that gets multiplied with the master volume
+                    music_manager->setTemporaryVolume(0.5f);
                 }
             }
             else
@@ -439,6 +442,14 @@ void LinearWorld::newLap(unsigned int kart_index)
                 m_last_lap_sfx_played = true;
                 m_last_lap_sfx_playing = false;
             }
+        }
+        // Switch on faster music if not already done so, if the
+        // first kart is doing its last lap.
+        if(!m_faster_music_active &&
+            useFastMusicNearEnd())
+        {
+            music_manager->switchToFastMusic();
+            m_faster_music_active=true;
         }
     }
     else if (raceHasLaps() && kart_info.m_finished_laps > 0 &&
@@ -889,7 +900,6 @@ void LinearWorld::updateRacePosition()
             setKartPosition(i, kart->getPosition());
             continue;
         }
-        KartInfo& kart_info = m_kart_info[i];
 
         int p = 1 ;
 
@@ -952,17 +962,6 @@ void LinearWorld::updateRacePosition()
             assert(false);
         }
 #endif
-
-        // Switch on faster music if not already done so, if the
-        // first kart is doing its last lap.
-        if(!m_faster_music_active                                  &&
-            p == 1                                                 &&
-            kart_info.m_finished_laps == RaceManager::get()->getNumLaps() - 1 &&
-            useFastMusicNearEnd()                                       )
-        {
-            music_manager->switchToFastMusic();
-            m_faster_music_active=true;
-        }
     }   // for i<kart_amount
 
     // Define this to get a detailled analyses each time a race position

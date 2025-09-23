@@ -43,14 +43,14 @@
 #include <FindDirectory.h>
 #endif
 
-#include <irrlicht.h>
-
 #include <stdio.h>
 #include <stdexcept>
 #include <sstream>
 #include <sys/stat.h>
 #include <iostream>
 #include <string>
+
+#include <IFileSystem.h>
 
 namespace irr {
     namespace io
@@ -852,6 +852,14 @@ std::string FileManager::getGPDir() const
 }   // getGPDir
 
 //-----------------------------------------------------------------------------
+/** Returns the directory in which the stdout file should be stored.
+ */
+std::string FileManager::getStdoutDir() const
+{
+    return m_stdout_dir;
+}   // getStdoutDir
+
+//-----------------------------------------------------------------------------
 /** Returns the full path of a texture file name by searching in all
  *  directories currently in the texture search path. The difference to
  *  a call getAsset(TEXTURE,...) is that the latter will only return
@@ -1017,15 +1025,16 @@ void FileManager::checkAndCreateConfigDir()
 #elif defined(__HAIKU__)
 
         BPath settings_dir;
-        if (find_directory(B_USER_SETTINGS_DIRECTORY, &settings_dir, true, NULL) == B_OK) {
+        if (find_directory(B_USER_SETTINGS_DIRECTORY, &settings_dir, true, NULL) == B_OK)
+        {
             m_user_config_dir = std::string(settings_dir.Path());
-	} else {
-            if (getenv("HOME") != NULL)
-            {
-                m_user_config_dir = getenv("HOME");
-                m_user_config_dir += "/config/settings";
-            }
-	}
+        }
+        else if (getenv("HOME") != NULL)
+        {
+            m_user_config_dir = getenv("HOME");
+            m_user_config_dir += "/config/settings";
+        }
+        m_user_config_dir += "/SuperTuxKart";
 
 #else
 
@@ -1092,6 +1101,8 @@ void FileManager::checkAndCreateAddonsDir()
 {
 #if defined(WIN32)
     m_addons_dir  = m_user_config_dir+"../addons/";
+#elif defined(__HAIKU__)
+    m_addons_dir  = m_user_config_dir+"addons/";
 #elif defined(__APPLE__)
     m_addons_dir  = getenv("HOME");
     m_addons_dir += "/Library/Application Support/SuperTuxKart/Addons/";
@@ -1181,7 +1192,7 @@ void FileManager::checkAndCreateReplayDir()
 */
 void FileManager::checkAndCreateCachedTexturesDir()
 {
-#if defined(WIN32)
+#if defined(WIN32) || defined(__HAIKU__)
     m_cached_textures_dir = m_user_config_dir + "cached-textures/";
 #elif defined(__APPLE__)
     m_cached_textures_dir = getenv("HOME");

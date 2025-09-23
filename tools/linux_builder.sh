@@ -51,10 +51,11 @@ export DIRNAME="$(dirname "$(readlink -f "$0")")"
 
 export STK_VERSION="git`date +%Y%m%d`"
 export THREADS_NUMBER=`nproc`
-export SCHROOT_32BIT_NAME="chroot-stretch32"
-export SCHROOT_64BIT_NAME="chroot-stretch64"
-export SCHROOT_ARMV7_NAME="chroot-stretch-armhf"
-export SCHROOT_ARM64_NAME="chroot-stretch-arm64"
+export SCHROOT_32BIT_NAME="chroot-buster32"
+export SCHROOT_64BIT_NAME="chroot-buster64"
+export SCHROOT_ARMV7_NAME="chroot-buster-armhf"
+export SCHROOT_ARM64_NAME="chroot-buster-arm64"
+export SCHROOT_RISCV_NAME="chroot-trixie-riscv64"
 
 export STKCODE_DIR="$DIRNAME/.."
 export STKASSETS_DIR="$STKCODE_DIR/../supertuxkart-assets"
@@ -301,6 +302,9 @@ build_stk()
         cp -a -f "$DEPENDENCIES_DIR/../lib/mbedtls/"* "$DEPENDENCIES_DIR/mbedtls"
     
         cd "$DEPENDENCIES_DIR/mbedtls"
+        if [ "$ARCH_OPTION" = "x86" ]; then
+            sed -i 's/#define MBEDTLS_AESNI_C//g' "$DEPENDENCIES_DIR/mbedtls/include/mbedtls/mbedtls_config.h"
+        fi
         cmake . -DCMAKE_FIND_ROOT_PATH="$INSTALL_DIR" \
                 -DCMAKE_INSTALL_PREFIX="$INSTALL_DIR" \
                 -DUSE_SHARED_MBEDTLS_LIBRARY=1 \
@@ -324,13 +328,15 @@ build_stk()
                 -DBUILD_TESTING=0 \
                 -DBUILD_CURL_EXE=0 \
                 -DCURL_USE_MBEDTLS=1 \
-                -DUSE_ZLIB=1 \
                 -DCURL_USE_OPENSSL=0 \
                 -DCURL_USE_LIBSSH=0 \
                 -DCURL_USE_LIBSSH2=0 \
                 -DCURL_USE_GSSAPI=0 \
+                -DCURL_USE_LIBPSL=0 \
+                -DUSE_ZLIB=1 \
                 -DUSE_NGHTTP2=0 \
                 -DUSE_QUICHE=0 \
+                -DUSE_LIBIDN2=0 \
                 -DHTTP_ONLY=1 \
                 -DCURL_CA_BUNDLE=none \
                 -DCURL_CA_PATH=none \
@@ -390,6 +396,42 @@ build_stk()
         touch "$DEPENDENCIES_DIR/libvorbis.stamp"
     fi
     
+    # Shaderc
+    if [ ! -f "$DEPENDENCIES_DIR/shaderc.stamp" ]; then
+        echo "Compiling shaderc"
+        mkdir -p "$DEPENDENCIES_DIR/shaderc"
+        cp -a -f "$DEPENDENCIES_DIR/../lib/shaderc/"* "$DEPENDENCIES_DIR/shaderc"
+        
+        cd "$DEPENDENCIES_DIR/shaderc"
+
+        if [ ! -f "$DEPENDENCIES_DIR/shaderc-deps.stamp" ]; then
+            ./utils/git-sync-deps
+            check_error
+            touch "$DEPENDENCIES_DIR/shaderc-deps.stamp"
+        fi
+
+        cmake . -DCMAKE_FIND_ROOT_PATH="$INSTALL_DIR" \
+                -DCMAKE_INSTALL_PREFIX="$INSTALL_DIR" \
+                -DCMAKE_C_FLAGS="-fpic -O3"           \
+                -DCMAKE_CXX_FLAGS="-fpic -O3"         \
+                -DSHADERC_SKIP_INSTALL=1              \
+                -DCMAKE_BUILD_TYPE=Release            \
+                -DSHADERC_SKIP_TESTS=1                \
+                -DSHADERC_SKIP_EXAMPLES=1             \
+                -DSPIRV_HEADERS_SKIP_INSTALL=1        \
+                -DSPIRV_HEADERS_SKIP_EXAMPLES=1       \
+                -DSKIP_SPIRV_TOOLS_INSTALL=1          \
+                -DSPIRV_SKIP_TESTS=1                  \
+                -DSPIRV_SKIP_EXECUTABLES=1            \
+                -DENABLE_GLSLANG_BINARIES=0           \
+                -DENABLE_CTEST=0 &&
+        make -j$THREADS_NUMBER &&
+        cp "$DEPENDENCIES_DIR/shaderc/libshaderc/libshaderc"* "$INSTALL_DIR/lib/" &&
+        cp -a -f "$DEPENDENCIES_DIR/shaderc/libshaderc/include/"* "$INSTALL_DIR/include/"
+        check_error
+        touch "$DEPENDENCIES_DIR/shaderc.stamp"
+    fi
+    
     # ASTC-encoder
     if [ ! -f "$DEPENDENCIES_DIR/astc-encoder.stamp" ]; then
         echo "Compiling astc-encoder"
@@ -418,7 +460,7 @@ build_stk()
                 -DCMAKE_CXX_FLAGS="-fpic -O3 -g $ASTC_CFLAGS" \
                 -DNO_INVARIANCE=ON -DCLI=OFF &&
         make -j$THREADS_NUMBER &&
-        cp "$DEPENDENCIES_DIR/astc-encoder/Source/libastcenc.a" "$INSTALL_DIR/lib/" &&
+        cp "$DEPENDENCIES_DIR/astc-encoder/Source/libastcenc-native-static.a" "$INSTALL_DIR/lib/" &&
         cp "$DEPENDENCIES_DIR/astc-encoder/Source/astcenc.h" "$INSTALL_DIR/include/"
         check_error
         touch "$DEPENDENCIES_DIR/astc-encoder.stamp"
@@ -431,10 +473,9 @@ build_stk()
         cp -a -f "$DEPENDENCIES_DIR/../lib/wayland/"* "$DEPENDENCIES_DIR/wayland"
     
         cd "$DEPENDENCIES_DIR/wayland"
-        ./autogen.sh
-        ./configure --prefix="$INSTALL_DIR" --disable-documentation &&
-        make -j$THREADS_NUMBER &&
-        make install
+        meson --prefix="$INSTALL_DIR" -Ddocumentation=false build &&
+        ninja -C build -j$THREADS_NUMBER &&
+        ninja -C build install
         check_error
         touch "$DEPENDENCIES_DIR/wayland.stamp"
     fi
@@ -446,7 +487,7 @@ build_stk()
         cp -a -f "$DEPENDENCIES_DIR/../lib/sdl2/"* "$DEPENDENCIES_DIR/sdl2"
     
         cd "$DEPENDENCIES_DIR/sdl2"
-        ./configure --prefix="$INSTALL_DIR" &&
+        ./configure --prefix="$INSTALL_DIR" --disable-audio &&
         make -j$THREADS_NUMBER &&
         make install
         check_error
@@ -503,7 +544,8 @@ build_stk()
         cd "$DEPENDENCIES_DIR/sqlite"
         cmake . -DCMAKE_FIND_ROOT_PATH="$INSTALL_DIR" \
                 -DCMAKE_INSTALL_PREFIX="$INSTALL_DIR" \
-                -DINSTALL_PKGCONFIG_DIR="$PKG_CONFIG_PATH" &&
+                -DINSTALL_PKGCONFIG_DIR="$PKG_CONFIG_PATH" \
+                -DENABLE_READLINE=0 &&
         make -j$THREADS_NUMBER &&
         make install
         check_error
@@ -540,6 +582,8 @@ build_stk()
              -DUSE_SYSTEM_ANGELSCRIPT=0 \
              -DUSE_SYSTEM_ENET=0 \
              -DUSE_SYSTEM_WIIUSE=0 \
+             -DUSE_SYSTEM_SQUISH=0 \
+             -DUSE_SYSTEM_MCPP=0 \
              -DUSE_CRYPTO_OPENSSL=0 \
              -DENABLE_WAYLAND_DEVICE=0 \
              -DBC7_ISPC=$HAS_ISPC \
@@ -549,15 +593,15 @@ build_stk()
     check_error
     
     # Stk editor
-    mkdir -p "$STKEDITOR_DIR/$BUILD_DIR"
-    cd "$STKEDITOR_DIR/$BUILD_DIR"
-    cmake .. -DCMAKE_FIND_ROOT_PATH="$INSTALL_DIR" \
-             -DSTATIC_ZLIB=1 \
-             -DSTATIC_PHYSFS=1 \
-             -DCMAKE_DISABLE_FIND_PACKAGE_Fontconfig=1 \
-             $STK_CMAKE_FLAGS &&
-    make -j$THREADS_NUMBER
-    check_error
+    # mkdir -p "$STKEDITOR_DIR/$BUILD_DIR"
+    # cd "$STKEDITOR_DIR/$BUILD_DIR"
+    # cmake .. -DCMAKE_FIND_ROOT_PATH="$INSTALL_DIR" \
+    #          -DSTATIC_ZLIB=1 \
+    #          -DSTATIC_PHYSFS=1 \
+    #          -DCMAKE_DISABLE_FIND_PACKAGE_Fontconfig=1 \
+    #          $STK_CMAKE_FLAGS &&
+    # make -j$THREADS_NUMBER
+    # check_error
 }
 
 copy_libraries()
@@ -614,20 +658,20 @@ test_package()
         exit 1
     fi
     
-    if [ `objdump -a "$PACKAGE_DIR/bin/supertuxkart-editor" | grep -c "$BINARY_ARCH"` -eq 0 ]; then
-        echo "Error: bin/supertuxkart-editor is not $BINARY_ARCH"
-        exit 1
-    fi
+    # if [ `objdump -a "$PACKAGE_DIR/bin/supertuxkart-editor" | grep -c "$BINARY_ARCH"` -eq 0 ]; then
+    #     echo "Error: bin/supertuxkart-editor is not $BINARY_ARCH"
+    #     exit 1
+    # fi
 
     if [ `LD_LIBRARY_PATH="$PACKAGE_DIR/lib" ldd "$PACKAGE_DIR/bin/supertuxkart" | grep -c "not found"` -gt 0 ]; then
         echo "Error: bin/supertuxkart has some missing libraries"
         exit 1
     fi
     
-    if [ `ldd "$PACKAGE_DIR/bin/supertuxkart-editor" | grep -c "not found"` -gt 0 ]; then
-        echo "Error: bin/supertuxkart-editor has some missing libraries"
-        exit 1
-    fi
+    # if [ `ldd "$PACKAGE_DIR/bin/supertuxkart-editor" | grep -c "not found"` -gt 0 ]; then
+    #     echo "Error: bin/supertuxkart-editor has some missing libraries"
+    #     exit 1
+    # fi
 
     LD_LIBRARY_PATH="$PACKAGE_DIR/lib" "$PACKAGE_DIR/bin/supertuxkart" --version
     
@@ -676,13 +720,13 @@ create_package()
     write_run_game_sh "$STK_PACKAGE_DIR"
     
     cp "$STKCODE_DIR/$BUILD_DIR-$ARCH/bin/supertuxkart" "$STK_INSTALL_DIR/supertuxkart-$STK_VERSION-linux-$ARCH-symbols"
-    cp "$STKEDITOR_DIR/$BUILD_DIR-$ARCH/bin/supertuxkart-editor" "$STK_INSTALL_DIR/supertuxkart-editor-$STK_VERSION-linux-$ARCH-symbols"
+    # cp "$STKEDITOR_DIR/$BUILD_DIR-$ARCH/bin/supertuxkart-editor" "$STK_INSTALL_DIR/supertuxkart-editor-$STK_VERSION-linux-$ARCH-symbols"
     
     cp -a "$STKCODE_DIR/$BUILD_DIR-$ARCH/bin/supertuxkart" "$STK_PACKAGE_DIR/bin/"
-    cp -a "$STKEDITOR_DIR/$BUILD_DIR-$ARCH/bin/supertuxkart-editor" "$STK_PACKAGE_DIR/bin/"
+    # cp -a "$STKEDITOR_DIR/$BUILD_DIR-$ARCH/bin/supertuxkart-editor" "$STK_PACKAGE_DIR/bin/"
     
     cp -a "$STKCODE_DIR/data/." "$STK_PACKAGE_DIR/data"
-    cp -a "$STKASSETS_DIR/editor" "$STK_PACKAGE_DIR/data/"
+    # cp -a "$STKASSETS_DIR/editor" "$STK_PACKAGE_DIR/data/"
     cp -a "$STKASSETS_DIR/karts" "$STK_PACKAGE_DIR/data/"
     cp -a "$STKASSETS_DIR/library" "$STK_PACKAGE_DIR/data/"
     cp -a "$STKASSETS_DIR/models" "$STK_PACKAGE_DIR/data/"
@@ -693,7 +737,7 @@ create_package()
     cp -a "$STKASSETS_DIR/licenses.txt" "$STK_PACKAGE_DIR/data/"
     
     strip --strip-debug "$STK_PACKAGE_DIR/bin/supertuxkart"
-    strip --strip-debug "$STK_PACKAGE_DIR/bin/supertuxkart-editor"
+    # strip --strip-debug "$STK_PACKAGE_DIR/bin/supertuxkart-editor"
     
     find "$STK_PACKAGE_DIR/bin" -type f -exec chrpath -d {} \;
     find "$STK_PACKAGE_DIR/lib" -type f -exec chrpath -d {} \;
@@ -710,7 +754,7 @@ create_package()
     echo "Compress package..."
     
     cd "$STK_INSTALL_DIR"
-    tar cf - "SuperTuxKart-$STK_VERSION-linux-$ARCH" | xz -T$THREADS_NUMBER -z -e -f - > "SuperTuxKart-$STK_VERSION-linux-$ARCH.tar.xz"
+    tar -czf "SuperTuxKart-$STK_VERSION-linux-$ARCH.tar.gz" "SuperTuxKart-$STK_VERSION-linux-$ARCH"
     cd -
 }
 
@@ -718,7 +762,7 @@ create_package()
 if [ ! -z "$1" ] && [ "$1" = "clean" ]; then
     rm -rf "$DEPENDENCIES_DIR-"*
     rm -rf "$STKCODE_DIR/$BUILD_DIR-"*
-    rm -rf "$STKEDITOR_DIR/$BUILD_DIR-"*
+    # rm -rf "$STKEDITOR_DIR/$BUILD_DIR-"*
     rm -rf "$STK_INSTALL_DIR"
     exit 0
 fi
@@ -748,5 +792,6 @@ create_package "$SCHROOT_32BIT_NAME" "x86" "elf32-i386"
 create_package "$SCHROOT_64BIT_NAME" "x86_64" "elf64-x86-64"
 create_package "$SCHROOT_ARMV7_NAME" "armv7" "elf32-littlearm"
 create_package "$SCHROOT_ARM64_NAME" "arm64" "elf64-littleaarch64"
+create_package "$SCHROOT_RISCV_NAME" "riscv64" "elf64-littleriscv"
 
 echo "Success."

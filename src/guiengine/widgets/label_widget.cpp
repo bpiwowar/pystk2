@@ -40,7 +40,10 @@ LabelWidget::LabelWidget(LabelType type) : Widget(WTYPE_LABEL)
 {
     m_type   = type;
     m_scroll_speed = 0;
+    m_per_character_size = 0;
     m_scroll_offset = 0;
+    m_expand_if_needed = false;
+    m_word_wrap = false;
 
     if (m_type == BRIGHT)
     {
@@ -59,7 +62,7 @@ LabelWidget::LabelWidget(LabelType type) : Widget(WTYPE_LABEL)
 void LabelWidget::add()
 {
     rect<s32> widget_size = rect<s32>(m_x, m_y, m_x + m_w, m_y + m_h);
-    const bool word_wrap = m_properties[PROP_WORD_WRAP] == "true";
+    m_word_wrap = m_properties[PROP_WORD_WRAP] == "true";
     stringw message = getText();
 
     EGUI_ALIGNMENT align = EGUIA_UPPERLEFT;
@@ -76,12 +79,12 @@ void LabelWidget::add()
         IGUIElement* container = GUIEngine::getGUIEnv()->addButton(widget_size, m_parent, -1);
         core::rect<s32> r(core::position2di(0,0), widget_size.getSize());
         irrwidget = GUIEngine::getGUIEnv()->addStaticText(message.c_str(), r,
-                                                          false, word_wrap, /*m_parent*/ container, -1);
+                                                          false, m_word_wrap, /*m_parent*/ container, -1);
     }
     else
     {
         irrwidget = GUIEngine::getGUIEnv()->addStaticText(message.c_str(), widget_size,
-                                                          false, word_wrap, m_parent, -1);
+                                                          false, m_word_wrap, m_parent, -1);
         irrwidget->setTextRestrainedInside(false);
     }
 
@@ -109,6 +112,8 @@ void LabelWidget::add()
         irrwidget->setOverrideColor( video::SColor(255,255,255,255) );
         irrwidget->setOverrideFont( GUIEngine::getTinyTitleFont() );
     }
+    m_per_character_size = getCurrentFont()->getDimension(L"X").Height;
+
     //irrwidget->setBackgroundColor( video::SColor(255,255,0,0) );
     //irrwidget->setDrawBackground(true);
 
@@ -122,6 +127,8 @@ void LabelWidget::add()
 
     if (!m_is_visible)
         m_element->setVisible(false);
+
+    resize();
 }   // add
 
 // ----------------------------------------------------------------------------
@@ -129,19 +136,27 @@ void LabelWidget::add()
 void LabelWidget::setText(const core::stringw& text, bool expandIfNeeded)
 {
     m_scroll_offset = 0;
+    m_expand_if_needed = expandIfNeeded;
+    updateExpandedText(text);
+    Widget::setText(text);
+}   // setText
 
-    if (expandIfNeeded)
+// ----------------------------------------------------------------------------
+irr::gui::IGUIFont* LabelWidget::getCurrentFont() const
+{
+    IGUIFont* font = static_cast<IGUIStaticText*>(m_element)->getOverrideFont();
+    if (!font)
+        font = GUIEngine::getFont();
+    return font;
+}   // getCurrentFont
+
+// ----------------------------------------------------------------------------
+void LabelWidget::updateExpandedText(const irr::core::stringw& text)
+{
+    if (m_expand_if_needed)
     {
         assert(m_element != NULL);
-        int fwidth;
-        if(m_type == TITLE)
-            fwidth = GUIEngine::getTitleFont()->getDimension(text.c_str()).Width;
-        else if(m_type == SMALL_TITLE)
-            fwidth = GUIEngine::getSmallTitleFont()->getDimension(text.c_str()).Width;
-        else if(m_type == TINY_TITLE)
-            fwidth = GUIEngine::getTinyTitleFont()->getDimension(text.c_str()).Width;
-        else 
-            fwidth = GUIEngine::getFont()->getDimension(text.c_str()).Width;
+        int fwidth = getCurrentFont()->getDimension(text.c_str()).Width;
         core::rect<s32> rect = m_element->getRelativePosition();
 
         if (rect.getWidth() < fwidth)
@@ -151,12 +166,7 @@ void LabelWidget::setText(const core::stringw& text, bool expandIfNeeded)
             m_element->updateAbsolutePosition();
         }
     }
-
-    if (m_scroll_speed > 0)
-        m_scroll_offset = (float)m_w;
-
-    Widget::setText(text);
-}   // setText
+}   // updateExpandedText
 
 // ----------------------------------------------------------------------------
 /** Needs to be called to update scrolling.
@@ -166,8 +176,9 @@ void LabelWidget::update(float dt)
 {
     if (m_scroll_speed != 0)
     {
-        m_scroll_offset -= dt*m_scroll_speed*5.0f;
-        m_element->setRelativePosition( core::position2di( /*m_x +*/ (int)m_scroll_offset,
+        m_scroll_offset -= dt * m_scroll_speed * 5.0f;
+        int offset = (float)m_w + m_scroll_offset * m_per_character_size;
+        m_element->setRelativePosition( core::position2di( /*m_x +*/ offset,
                                                            /*m_y*/ 0 ) );
     }
 }   // update
@@ -177,7 +188,8 @@ bool LabelWidget::scrolledOff() const
 {
     // This method may only be called after this widget has been add()ed
     assert(m_element != NULL);
-    return m_scroll_offset <= -m_element->getAbsolutePosition().getWidth();
+    return (float)m_w + m_scroll_offset * m_per_character_size <=
+        -1.0f * (float)m_element->getAbsolutePosition().getWidth();
 }
 
 // ----------------------------------------------------------------------------
@@ -186,6 +198,40 @@ void LabelWidget::setScrollSpeed(float speed)
 {
     m_scroll_speed  = speed;
 }   // setScrollSpeed
+
+// ----------------------------------------------------------------------------
+
+void LabelWidget::resize()
+{
+    // Reduce the font size of normal text if it overflows
+    if (m_scroll_speed == 0 && m_type != TITLE && m_type != SMALL_TITLE && m_type != TINY_TITLE)
+    {
+        if( ((int)GUIEngine::getFont()->getDimension(m_text.c_str()).Width      >
+                            this->m_w) &&
+            ((int)GUIEngine::getFont()->getDimension(m_text.c_str()).Height * 2 > 
+                            this->m_h || !m_word_wrap) )
+        {
+            ((IGUIStaticText*)m_element)->setOverrideFont(GUIEngine::getSmallFont());
+        }
+        else
+        {
+            ((IGUIStaticText*)m_element)->setOverrideFont(NULL);
+        }
+    }
+
+    m_per_character_size = getCurrentFont()->getDimension(L"X").Height;
+
+    if (m_scroll_speed != 0)
+    {
+        rect<s32> widget_size = rect<s32>(m_x, m_y, m_x + m_w, m_y + m_h);
+        core::rect<s32> r(core::position2di(0, 0), widget_size.getSize());
+        m_element->getParent()->setRelativePosition(widget_size);
+        m_element->setRelativePosition(r);
+        updateExpandedText(m_text);
+    }
+    else
+        Widget::resize();
+}   // resize
 
 // ----------------------------------------------------------------------------
 

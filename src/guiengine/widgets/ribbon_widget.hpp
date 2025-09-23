@@ -28,7 +28,13 @@
 #include "utils/leak_check.hpp"
 #include "utils/ptr_vector.hpp"
 
-#include <IGUIStaticText.h>
+#include <map>
+
+namespace irr
+{
+    namespace gui { class IGUIButton; class IGUIStaticText; }
+}
+
 
 namespace GUIEngine
 {
@@ -109,7 +115,7 @@ namespace GUIEngine
         
         IRibbonListener* m_listener;
         PtrVector<Widget> m_active_children;
-        
+        std::map<int, std::pair<irr::gui::IGUIStaticText*, irr::gui::IGUIButton*> > m_child_data;
     public:
         
         LEAK_CHECK()
@@ -167,6 +173,13 @@ namespace GUIEngine
         /** Sets the ID of the selected item within the ribbon */
         void setSelection(const int i, const int playerID)
                              { m_selection[playerID] = i; updateSelection(); }
+
+        /** Sets the first active item within the ribbon as selected */
+        void setFirstSelection(const int playerID, bool reverse_order = false);
+
+        /** Sets the last active item within the ribbon as selected */
+        void setLastSelection(const int playerID)
+                             { setFirstSelection(playerID, true); }
         
         /** Select an item in the ribbon by its internal name */
         void select(std::string item, const int playerID);
@@ -224,6 +237,8 @@ namespace GUIEngine
         PtrVector<Widget>& getRibbonChildren() { return m_children; }
 
         virtual EventPropagation onActivationInput(const int playerID) OVERRIDE;
+
+        virtual void resize() OVERRIDE;
     };
 
 }

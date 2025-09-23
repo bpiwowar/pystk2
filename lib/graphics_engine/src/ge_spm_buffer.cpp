@@ -5,6 +5,9 @@
 #include "ge_vulkan_features.hpp"
 
 #include <algorithm>
+#include <stdexcept>
+
+#include "mini_glm.hpp"
 
 namespace GE
 {
@@ -52,13 +55,8 @@ void GESPMBuffer::createVertexIndexBuffer()
         throw std::runtime_error("createVertexIndexBuffer vmaMapMemory failed");
 
     size_t real_size = getVertexCount() * total_pitch;
-    uint8_t* loc = mapped;
-    for (unsigned i = 0; i < real_size; i += total_pitch)
-    {
-        uint8_t* vertices = ((uint8_t*)getVertices()) + i;
-        memcpy(loc, vertices, static_pitch);
-        loc += static_pitch;
-    }
+    copyToMappedBuffer((uint32_t*)mapped, this);
+    uint8_t* loc = mapped + getVertexCount() * static_pitch;
     memcpy(loc, m_indices.data(), m_indices.size() * sizeof(uint16_t));
 
     if (m_has_skinning)
@@ -99,5 +97,18 @@ void GESPMBuffer::destroyVertexIndexBuffer()
     m_buffer = VK_NULL_HANDLE;
     m_memory = VK_NULL_HANDLE;
 }   // destroyVertexIndexBuffer
+
+// ----------------------------------------------------------------------------
+void GESPMBuffer::setNormal(u32 i, const core::vector3df& normal)
+{
+    m_vertices[i].m_normal = MiniGLM::compressVector3(normal);
+}   // setNormal
+
+// ----------------------------------------------------------------------------
+void GESPMBuffer::setTCoords(u32 i, const core::vector2df& tcoords)
+{
+    m_vertices[i].m_all_uvs[0] = MiniGLM::toFloat16(tcoords.X);
+    m_vertices[i].m_all_uvs[1] = MiniGLM::toFloat16(tcoords.Y);
+}   // setTCoords
 
 }

@@ -5,7 +5,7 @@
 #include <pybind11/numpy.h>
 
 #include "config/stk_config.hpp"
-#include "graphics/camera.hpp"
+#include "graphics/camera/camera.hpp"
 #include "karts/skidding.hpp"
 #include "karts/abstract_kart.hpp"
 #include "karts/controller/controller.hpp"

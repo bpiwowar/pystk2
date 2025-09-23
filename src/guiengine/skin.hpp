@@ -176,6 +176,8 @@ namespace GUIEngine
 
         short m_skin_r, m_skin_g, m_skin_b;
 
+        SkinWidgetContainer *m_next;
+
         SkinWidgetContainer()
         {
             m_skin_dest_areas_inited = false;
@@ -187,7 +189,16 @@ namespace GUIEngine
             m_skin_r = -1;
             m_skin_g = -1;
             m_skin_b = -1;
+            m_next = nullptr;
         }   // SkinWidgetContainer
+
+        ~SkinWidgetContainer()
+        {
+            if (m_next != nullptr)
+            {
+                delete m_next;
+            }
+        }
     };   // class SkinWidgetContainer
 
     // ========================================================================
@@ -269,10 +280,12 @@ namespace GUIEngine
     {
         gui::IGUISkin* m_fallback_skin;
 
-
         video::ITexture* m_bg_image;
         std::vector<Widget*> m_tooltips;
         std::vector<bool> m_tooltip_at_mouse;
+
+        // The paths to the folder of the active skin and its base themes
+        std::vector<std::string> m_skin_paths;
 
         LEAK_CHECK()
 
@@ -334,6 +347,7 @@ namespace GUIEngine
 
         ~Skin();
 
+        void chainLoad(std::string skin_id);
         void resetBackgroundImage() { m_bg_image = NULL; }
         static video::SColor getColor(const std::string &name);
         void renderSections(PtrVector<Widget>* within_vector=NULL);

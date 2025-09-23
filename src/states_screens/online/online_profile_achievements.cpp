@@ -24,6 +24,8 @@
 #include "guiengine/scalable_font.hpp"
 #include "guiengine/screen.hpp"
 #include "guiengine/widget.hpp"
+#include "guiengine/widgets/icon_button_widget.hpp"
+#include "guiengine/widgets/ribbon_widget.hpp"
 #include "online/online_profile.hpp"
 #include "states_screens/dialogs/achievement_progress_dialog.hpp"
 #include "states_screens/dialogs/player_rankings_dialog.hpp"
@@ -196,7 +198,7 @@ void BaseOnlineProfileAchievements::displayResults()
             all_achievements_list.push_back(it->second);
         }
 
-        auto compAchievement = [=](Achievement *a, Achievement *b)
+        auto compAchievement = [this](Achievement *a, Achievement *b)
         {
             // Sort by name
             if (m_sort_column == 0)
@@ -226,8 +228,8 @@ void BaseOnlineProfileAchievements::displayResults()
             if (a->getInfo()->isSecret() && !a->isAchieved())
                 continue;
             ListWidget::ListCell title(a->getInfo()->getName(), -1, 2);
-            ListWidget::ListCell goals(a->getGoalProgressAsString(), -1, 1);
-            ListWidget::ListCell progress(a->getProgressAsString(), -1, 1);
+            ListWidget::ListCell goals(a->getGoalProgressAsString(), -1, 1, true);
+            ListWidget::ListCell progress(a->getProgressAsString(), -1, 1, true);
             row.push_back(title);
             row.push_back(goals);
             row.push_back(progress);

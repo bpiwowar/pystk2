@@ -40,7 +40,7 @@ if [ -z "$NDK_PATH" ]; then
 fi
 
 if [ -z "$STK_NDK_VERSION" ]; then
-    export STK_NDK_VERSION=23.1.7779620
+    export STK_NDK_VERSION="28.1.13356709"
 fi
 
 NDK_PATH="$(realpath "$NDK_PATH")/${STK_NDK_VERSION}"
@@ -62,7 +62,7 @@ build_deps()
         ARCH_OPTION="armeabi-v7a"
         export ARCH=$ARCH_ARMV7
         # Special case
-        export HOST=armv7a-linux-androideabi16
+        export HOST=armv7a-linux-androideabi21
         export HOST_DIR=$HOST_ARMV7
     elif [ "$ARCH_OPTION" = "aarch64" ]; then
         ARCH_OPTION="arm64-v8a"
@@ -72,7 +72,7 @@ build_deps()
     elif [ "$ARCH_OPTION" = "x86" ]; then
         export ARCH=$ARCH_X86
         export HOST_DIR=$HOST_X86
-        export HOST="${HOST_DIR}16"
+        export HOST="${HOST_DIR}21"
     elif [ "$ARCH_OPTION" = "x86_64" ]; then
         export ARCH=$ARCH_X86_64
         export HOST_DIR=$HOST_X86_64
@@ -91,7 +91,7 @@ build_deps()
 
         cd "$DIRNAME/deps-$ARCH_OPTION/zlib"
         cmake . -DCMAKE_TOOLCHAIN_FILE=../../../cmake/Toolchain-android.cmake \
-                -DHOST=$HOST -DARCH=$ARCH -DCMAKE_C_FLAGS="-fpic -O3 -g" &&
+                -DHOST=$HOST -DARCH=$ARCH -DCMAKE_C_FLAGS=" -Wl,--undefined-version -fpic -O3 -g" &&
         make -j $(($(nproc) + 1))
         check_error
         touch "$DIRNAME/deps-$ARCH_OPTION/zlib.stamp"
@@ -203,6 +203,9 @@ build_deps()
         echo "Compiling $ARCH_OPTION mbedtls"
         mkdir -p "$DIRNAME/deps-$ARCH_OPTION/mbedtls"
         cp -a -f "$DIRNAME/../lib/mbedtls/"* "$DIRNAME/deps-$ARCH_OPTION/mbedtls"
+        if [ "$ARCH_OPTION" = "x86" ]; then
+            sed -i 's/#define MBEDTLS_AESNI_C//g' "$DIRNAME/deps-$ARCH_OPTION/mbedtls/include/mbedtls/mbedtls_config.h"
+        fi
 
         cd "$DIRNAME/deps-$ARCH_OPTION/mbedtls"
         cmake . -DCMAKE_TOOLCHAIN_FILE=../../../cmake/Toolchain-android.cmake \
@@ -291,6 +294,13 @@ build_deps()
         cp -a -f "$DIRNAME/../lib/shaderc/"* "$DIRNAME/deps-$ARCH_OPTION/shaderc"
 
         cd "$DIRNAME/deps-$ARCH_OPTION/shaderc"
+        
+        if [ ! -f "$DIRNAME/deps-$ARCH_OPTION/shaderc-deps.stamp" ]; then
+            ./utils/git-sync-deps
+            check_error
+            touch "$DIRNAME/deps-$ARCH_OPTION/shaderc-deps.stamp"
+        fi
+        
         cmake . -DCMAKE_TOOLCHAIN_FILE=../../../cmake/Toolchain-android.cmake  \
                 -DHOST=$HOST -DARCH=$ARCH -DCMAKE_C_FLAGS="-fpic -O3"          \
                 -DCMAKE_CXX_FLAGS="-fpic -O3" -DSHADERC_SKIP_INSTALL=1         \
@@ -337,28 +347,26 @@ build_deps()
 
         cd "$DIRNAME/deps-$ARCH_OPTION/astc-encoder"
         sed -i '/-Werror/d' Source/cmake_core.cmake
-        sed -i 's|${ASTC_TARGET}-static|astcenc|g' Source/cmake_core.cmake
+        sed -i 's|${ASTCENC_TARGET}-static|astcenc|g' Source/cmake_core.cmake
         if [ "$ARCH_OPTION" = "armeabi-v7a" ]; then
             cmake . -DCMAKE_TOOLCHAIN_FILE=../../../cmake/Toolchain-android.cmake \
                     -DHOST=$HOST -DARCH=$ARCH -DSTK_ARM_NEON=ON                   \
                     -DCMAKE_C_FLAGS="-fpic -O3 -g -mfpu=neon"                     \
                     -DCMAKE_CXX_FLAGS="-fpic -O3 -g -mfpu=neon"                   \
-                    -DNO_INVARIANCE=ON -DCLI=OFF
+                    -DASTCENC_INVARIANCE=OFF -DASTCENC_CLI=OFF
         elif [ "$ARCH_OPTION" = "arm64-v8a" ]; then
             cmake . -DCMAKE_TOOLCHAIN_FILE=../../../cmake/Toolchain-android.cmake \
                     -DHOST=$HOST -DARCH=$ARCH -DCMAKE_C_FLAGS="-fpic -O3 -g"      \
                     -DCMAKE_CXX_FLAGS="-fpic -O3 -g"                              \
-                    -DISA_NEON=ON -DNO_INVARIANCE=ON -DCLI=OFF
-        elif [ "$ARCH_OPTION" = "x86" ]; then
-            cmake . -DCMAKE_TOOLCHAIN_FILE=../../../cmake/Toolchain-android.cmake \
-                    -DHOST=$HOST -DARCH=$ARCH -DCMAKE_C_FLAGS="-fpic -O3 -g"      \
-                    -DCMAKE_CXX_FLAGS="-fpic -O3 -g"                              \
-                    -DISA_SSE2=ON -DNO_INVARIANCE=ON -DCLI=OFF
+                    -DASTCENC_ISA_NEON=ON -DASTCENC_INVARIANCE=OFF -DASTCENC_CLI=OFF
         else
+            if [ "$ARCH_OPTION" = "x86" ]; then
+                sed -i 's/_mm_popcnt_u64/__builtin_popcountll/g' Source/astcenc_vecmathlib_sse_4.h
+            fi
             cmake . -DCMAKE_TOOLCHAIN_FILE=../../../cmake/Toolchain-android.cmake \
                     -DHOST=$HOST -DARCH=$ARCH -DCMAKE_C_FLAGS="-fpic -O3 -g"      \
                     -DCMAKE_CXX_FLAGS="-fpic -O3 -g"                              \
-                    -DISA_SSE41=ON -DNO_INVARIANCE=ON -DCLI=OFF
+                    -DASTCENC_ISA_SSE41=ON -DASTCENC_INVARIANCE=OFF -DASTCENC_CLI=OFF
         fi
         make -j $(($(nproc) + 1))
         check_error

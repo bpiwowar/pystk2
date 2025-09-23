@@ -1,11 +1,13 @@
 #include "ge_vulkan_texture_descriptor.hpp"
 
 #include "ge_main.hpp"
+#include "ge_material_manager.hpp"
 #include "ge_vulkan_driver.hpp"
 #include "ge_vulkan_texture.hpp"
 
 #include <algorithm>
 #include <exception>
+#include <stdexcept>
 
 namespace GE
 {
@@ -189,7 +191,8 @@ void GEVulkanTextureDescriptor::updateDescriptor()
 }   // updateDescriptor
 
 // ----------------------------------------------------------------------------
-int GEVulkanTextureDescriptor::getTextureID(const irr::video::ITexture** list)
+int GEVulkanTextureDescriptor::getTextureID(const irr::video::ITexture** list,
+                                            const std::string& shader)
 {
     TextureList key =
     {{
@@ -202,12 +205,14 @@ int GEVulkanTextureDescriptor::getTextureID(const irr::video::ITexture** list)
         m_transparent_image,
         m_transparent_image
     }};
+    const auto& material = GEMaterialManager::getMaterial(shader);
     for (unsigned i = 0; i < m_max_layer; i++)
     {
         if (list[i])
         {
             key[i] = static_cast<const GEVulkanTexture*>(
-                list[i])->getImageView();
+                list[i])->getImageView(getGEConfig()->m_pbr && material ?
+                material->m_srgb_settings[i] : false);
         }
     }
     auto it = m_texture_list.find(key);

@@ -3,7 +3,11 @@
 
 #include "vulkan_wrapper.h"
 #include <string>
-#include <shaderc/shaderc.hpp>
+#ifdef DISABLE_SHADERC
+  #define shaderc_shader_kind int
+#else
+  #include <shaderc/shaderc.h>
+#endif
 
 namespace GE
 {
@@ -15,7 +19,7 @@ void init(GEVulkanDriver*);
 // ----------------------------------------------------------------------------
 void destroy();
 // ----------------------------------------------------------------------------
-void loadAllShaders();
+void loadAllShaders(const std::string& match_filename = "");
 // ----------------------------------------------------------------------------
 VkShaderModule getShader(const std::string& filename);
 // ----------------------------------------------------------------------------

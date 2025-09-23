@@ -26,6 +26,8 @@
 #include "guiengine/skin.hpp"
 #include "io/file_manager.hpp"
 
+#include <IAnimatedMesh.h>
+
 AttachmentManager *attachment_manager = 0;
 
 struct  initAttachmentType {Attachment::AttachmentType attachment;
@@ -98,8 +100,10 @@ void AttachmentManager::loadModels()
                                                     + iat[i].icon_file);
             m_all_icons[iat[i].attachment] =
                 material_manager->getMaterial(full_icon_path,
-                                              /* full_path */     true,
-                                              /*make_permanent */ true);
+                                              /*full_path*/             true,
+                                              /*make_permanent*/        true,
+                                              /*complain_if_not_found*/ true,
+                                              /*strip_path*/            false);
         }
         if (GUIEngine::isNoGraphics())
             mesh->freeMeshVertexBuffer();

@@ -18,14 +18,22 @@
 #ifndef SERVER_ONLY
 
 #include "graphics/stk_text_billboard.hpp"
-#include "graphics/sp/sp_base.hpp"
 #include "graphics/central_settings.hpp"
 #include "graphics/irr_driver.hpp"
 #include "graphics/graphics_restrictions.hpp"
 
+#include <ge_main.hpp>
+#include <ge_material_manager.hpp>
 #include <ge_spm.hpp>
 #include <ge_spm_buffer.hpp>
 #include <sstream>
+#include <ICameraSceneNode.h>
+#include <IMeshCache.h>
+#include <IMeshSceneNode.h>
+#include <ISceneManager.h>
+#include <ITexture.h>
+#include <IVideoDriver.h>
+#include <SMeshBuffer.h>
 
 // ----------------------------------------------------------------------------
 STKTextBillboard::STKTextBillboard(const video::SColor& color_top,
@@ -37,7 +45,7 @@ STKTextBillboard::STKTextBillboard(const video::SColor& color_top,
                 : ISceneNode(parent, mgr, id, position,
                              core::vector3df(0.0f, 0.0f, 0.0f), scale)
 {
-    using namespace SP;
+    using namespace GE;
     m_color_top = color_top;
     if (CVS->isDeferredEnabled() && CVS->isGLSL())
     {
@@ -60,7 +68,7 @@ STKTextBillboard::STKTextBillboard(const video::SColor& color_top,
 // ----------------------------------------------------------------------------
 float STKTextBillboard::getDefaultScale(FontWithFace* face)
 {
-    return 1.0f / (float)face->getDPI();
+    return 1.0f / (float)face->getDPI() / face->getNativeScalingFactor();
 }   // getDefaultScale
 
 // ----------------------------------------------------------------------------
@@ -88,13 +96,7 @@ void STKTextBillboard::updateAbsolutePosition()
     core::matrix4 m;
     m.setScale(RelativeScale);
     AbsoluteTransformation *= m;
-    if (m_ge_node)
-    {
-        m_ge_node->setPosition(AbsoluteTransformation.getTranslation());
-        m_ge_node->setRotation(AbsoluteTransformation.getRotationDegrees());
-        m_ge_node->setScale(AbsoluteTransformation.getScale());
-    }
-    else if (CVS->isGLSL())
+    if (CVS->isGLSL())
     {
         m_instanced_data =
             SP::SPInstancedData(AbsoluteTransformation, 0, 0, 0, 0);
@@ -386,7 +388,7 @@ void STKTextBillboard::initLegacy(const core::stringw& text, FontWithFace* face)
             GE::GESPMBuffer* spm_mb = new GE::GESPMBuffer();
             spm_mb->getMaterial().setTexture(0, p.first);
             spm_mb->getMaterial().MaterialType =
-                video::EMT_TRANSPARENT_ALPHA_CHANNEL_REF;
+                GE::GEMaterialManager::getIrrMaterialType("unlit");
             spm_mb->getMaterial().Lighting = false;
             for (auto& q : p.second)
             {
@@ -418,7 +420,7 @@ void STKTextBillboard::initLegacy(const core::stringw& text, FontWithFace* face)
         oss << (uint64_t)spm;
         SceneManager->getMeshCache()->addMesh(oss.str().c_str(), spm);
         spm->drop();
-        m_ge_node = SceneManager->addMeshSceneNode(spm);
+        m_ge_node = SceneManager->addMeshSceneNode(spm, this);
     }
     else
     {
@@ -536,6 +538,27 @@ void STKTextBillboard::removeGENode()
         m_ge_node = NULL;
     }
 }   // removeGENode
+
+// ----------------------------------------------------------------------------
+void STKTextBillboard::clearBuffer()
+{
+    if (m_instanced_array != 0)
+    {
+        glDeleteBuffers(1, &m_instanced_array);
+    }
+    for (auto& p : m_vao_vbos)
+    {
+        glDeleteVertexArrays(1, &p.second.first);
+        glDeleteBuffers(1, &p.second.second);
+    }
+    m_vao_vbos.clear();
+    for (auto& p : m_gl_mb)
+    {
+        p.second->drop();
+    }
+    m_gl_mb.clear();
+    m_gl_tbs.clear();
+}   // clearBuffer
 
 #endif   // !SERVER_ONLY
 

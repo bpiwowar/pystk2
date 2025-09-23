@@ -29,14 +29,12 @@
 #include "utils/vec3.hpp"
 
 #include <vector3d.h>
-#include <IAnimatedMeshSceneNode.h>
 
 #include <memory>
 #include <limits>
 #include <string>
 
 class SFXBase;
-class ParticleEmitter;
 class PhysicalObject;
 class ThreeDAnimation;
 class ModelDefinitionLoader;
@@ -45,9 +43,13 @@ class STKInstancedSceneNode;
 class XMLNode;
 class TrackObject;
 
+#ifndef SERVER_ONLY
+class ParticleEmitter;
+#endif
+
 namespace irr
 {
-    namespace scene { class IAnimatedMesh; class IMeshSceneNode; class ISceneNode; }
+    namespace scene { class IAnimatedMesh; class IMesh; class IMeshSceneNode; class ISceneNode; }
 }
 using namespace irr;
 
@@ -336,7 +338,9 @@ public:
 class TrackObjectPresentationParticles : public TrackObjectPresentationSceneNode
 {
 private:
+#ifndef SERVER_ONLY
     ParticleEmitter* m_emitter;
+#endif
     LODNode* m_lod_emitter_node;
     std::string m_trigger_condition;
     bool m_delayed_stop;

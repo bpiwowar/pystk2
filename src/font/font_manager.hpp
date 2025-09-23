@@ -153,5 +153,11 @@ public:
 
 extern FontManager *font_manager;
 
+namespace LineBreakingRules
+{
+    bool endSentence(char32_t c);
+    bool breakable(char32_t c);
+}
+
 #endif
 /* EOF */
