@@ -60,7 +60,7 @@ jobs:
       with:
         submodules: true
   
-    - uses: pypa/cibuildwheel@v3.20
+    - uses: pypa/cibuildwheel@v3.2.0
       with:
         only: ${{ matrix.only }}
       env:
