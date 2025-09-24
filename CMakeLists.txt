@@ -880,7 +880,7 @@ if(MSVC)
     -manifest \"${PROJECT_SOURCE_DIR}\\windows\\dpi_aware.manifest\" 
     -inputresource:\"$<TARGET_FILE:supertuxkart>\"\;\#1
     -outputresource:\"$<TARGET_FILE:supertuxkart>\"\;\#1)
-  endif
+  endif()
 endif()
 
 if(MINGW)
