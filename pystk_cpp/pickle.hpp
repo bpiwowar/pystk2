@@ -18,8 +18,9 @@ template<typename T>
 void pickle(std::ostream & s, const std::vector<T> & o) {
     uint32_t n = o.size();
     s.write((const char*)&n, sizeof(n));
-    for(uint32_t i = 0; i < n; i++)
+    for(uint32_t i = 0; i < n; i++) {
         pickle(s, o[i]);
+    }
 }
 template<typename T, std::size_t N> void pickle(std::ostream & s, const std::array<T, N> & o) {
     for(size_t i=0; i<N; i++)
@@ -40,6 +41,7 @@ template<typename T>
 void unpickle(std::istream & s, std::vector<T> * o) {
     uint32_t n;
     s.read((char*)&n, sizeof(n));
+
     o->resize(n);
     for(uint32_t i = 0; i < n; i++)
         unpickle(s, &(*o)[i]);

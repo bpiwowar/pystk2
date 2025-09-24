@@ -574,6 +574,7 @@ struct PyTrack {
 	py::array_t<float> path_nodes;
 	py::array_t<float> path_width;
 	py::array_t<float> path_distance;
+	std::vector<std::vector<int>> successors;
 	
 	static void define(py::object m) {
 		py::class_<PyTrack, std::shared_ptr<PyTrack> > c(m, "Track");
@@ -583,9 +584,12 @@ struct PyTrack {
 		  R(path_nodes, "Center line of the drivable area as line segments of 3d coordinates (float N x 2 x 3)")
 		  R(path_width, "Width of the path segment (float N)")
 		  R(path_distance, "Distance down the track of each line segment (float N x 2)")
+		  R(successors, "For each node, its successors (N lists)")
 #undef R
 		 .def("update", &PyTrack::update) 
-		 .def("__repr__", [](const PyTrack &t) { return "<Track length="+std::to_string(t.length)+">"; });
+		 .def("__repr__", [](const PyTrack &t) { return "<Track length="+std::to_string(t.length)+">"; })
+		 
+		 ;
 		add_pickle(c);
 	}
 	
@@ -606,6 +610,12 @@ struct PyTrack {
 				*path_width.mutable_data(i) = node->getPathWidth();
 				*path_distance.mutable_data(i,0) = node->getDistanceFromStart();
 				*path_distance.mutable_data(i,1) = node->getDistanceFromStart() + node->getNodeLength();
+
+				std::vector<int> node_successors;
+				for(int i = 0; i < node->getNumberOfSuccessors(); ++i) {
+					node_successors.push_back(node->getSuccessor(i));
+				}
+				successors.push_back(std::move(node_successors));
 			}
 		}
 	}
@@ -786,6 +796,8 @@ void pickle(std::ostream & s, const PyKart & o) {
     pickle(s, o.lives);
     pickle(s, o.skeed_factor);
     pickle(s, o.has_finished_race);
+	pickle(s, o.node);
+	pickle(s, o.is_on_road);
 }
 void unpickle(std::istream & s, PyKart * o) {
     unpickle(s, &o->id);
@@ -814,6 +826,8 @@ void unpickle(std::istream & s, PyKart * o) {
     unpickle(s, &o->lives);
     unpickle(s, &o->skeed_factor);
     unpickle(s, &o->has_finished_race);
+    unpickle(s, &o->node);
+    unpickle(s, &o->is_on_road);
 }
 void pickle(std::ostream & s, const PyItem & o) {
     pickle(s, o.id);
@@ -856,12 +870,14 @@ void pickle(std::ostream & s, const PyTrack & o) {
     ::pickle(s, o.path_nodes);
     ::pickle(s, o.path_width);
     ::pickle(s, o.path_distance);
+    ::pickle(s, o.successors);
 }
 void unpickle(std::istream & s, PyTrack * o) {
     unpickle(s, &o->length);
     unpickle(s, &o->path_nodes);
     unpickle(s, &o->path_width);
     unpickle(s, &o->path_distance);
+    unpickle(s, &o->successors);
 }
 void pickle(std::ostream & s, const PyPlayer & o) {
     pickle(s, o.id);
