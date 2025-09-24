@@ -389,11 +389,15 @@ if (!GUIEngine::isReallyNoGraphics()) {
     file_manager->popModelSearchPath();
 
 #ifndef SERVER_ONLY
+if (!GUIEngine::isReallyNoGraphics()) 
+{
+
     if (GE::getDriver()->getDriverType() == video::EDT_VULKAN)
     {
         for (auto& t : odt)
-            GE::getGEConfig()->m_ondemand_load_texture_paths.erase(t);
+        GE::getGEConfig()->m_ondemand_load_texture_paths.erase(t);
     }
+}
 #endif
 }   // load
 

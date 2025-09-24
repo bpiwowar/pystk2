@@ -2577,6 +2577,9 @@ void Track::loadObjects(const XMLNode* root, const std::string& path,
  */
 void Track::handleSky(const XMLNode &xml_node, const std::string &filename)
 {
+    // No need to run anything here, since this is only graphics related
+    if (GUIEngine::isReallyNoGraphics()) return; 
+
     if(xml_node.getName()=="sky-box")
     {
         std::string s;

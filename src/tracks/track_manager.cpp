@@ -542,13 +542,19 @@ void TrackManager::updateScreenshotCache()
         if (!file_manager->fileExists(full_path))
             continue;
 #ifndef SERVER_ONLY
+if (!GUIEngine::isReallyNoGraphics()) 
+{
         if (GE::getDriver()->getDriverType() == video::EDT_VULKAN)
             GE::getGEConfig()->m_ondemand_load_texture_paths.insert(full_path);
+}
 #endif
         irr_driver->getTexture(t->getScreenshotFile());
 #ifndef SERVER_ONLY
+if (!GUIEngine::isReallyNoGraphics()) 
+{
         if (GE::getDriver()->getDriverType() == video::EDT_VULKAN)
             GE::getGEConfig()->m_ondemand_load_texture_paths.erase(full_path);
+}
 #endif
     }
 }   // updateScreenshotCache
