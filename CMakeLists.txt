@@ -874,11 +874,13 @@ endif()
 
 if(MSVC)
   SET(CMAKE_SHARED_LINKER_FLAGS /MANIFEST:NO)
+  if (FALSE) # JUst avoid this for PySTK
   add_custom_command(
     TARGET supertuxkart POST_BUILD COMMAND "mt.exe" 
     -manifest \"${PROJECT_SOURCE_DIR}\\windows\\dpi_aware.manifest\" 
     -inputresource:\"$<TARGET_FILE:supertuxkart>\"\;\#1
     -outputresource:\"$<TARGET_FILE:supertuxkart>\"\;\#1)
+  endif
 endif()
 
 if(MINGW)
