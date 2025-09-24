@@ -72,8 +72,7 @@ jobs:
         # Download dependencies for MacOS
         # ... and try to get rid of Mono
         CIBW_BEFORE_ALL_MACOS: |
-          brew update
-          brew install cmake openssl@3 curl freetype harfbuzz jpeg libogg libpng libvorbis openal-soft sdl2 shaderc
+          curl  -L  "https://github.com/supertuxkart/dependencies/releases/download/preview/dependencies-macosx.tar.xz"  | tar -xv
           sudo rm -rf /Library/Frameworks/Mono.framework
         
           # ... and use the path dependency libraries when delocating
