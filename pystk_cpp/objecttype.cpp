@@ -1,8 +1,10 @@
-#include "objecttype.hpp"
-#include "utils/log.hpp"
+#include <cstdint>   // C++ style
 #include <iostream>
 #include <unordered_map>
 #include <vector>
+
+#include "objecttype.hpp"
+#include "utils/log.hpp"
 
 ObjectType getOT(const std::string & debug_name) {
 	return OT_UNKNOWN;
