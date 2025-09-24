@@ -26,8 +26,9 @@ jobs:
     - name: Check metadata
       run: pipx run twine check dist/*
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
+        name: sdist-artifact
         path: dist/*.tar.gz
 
   generate-wheels-matrix:
@@ -36,7 +37,7 @@ jobs:
     outputs:
       include: ${{ steps.set-matrix.outputs.include }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install cibuildwheel
         run: pipx install cibuildwheel==2.20.0
       # Use macos-13 
@@ -86,8 +87,9 @@ jobs:
       run: git diff --exit-code
       shell: bash
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
+        name: wheels-${{ matrix.only }}
         path: wheelhouse/*.whl
 
 
@@ -98,14 +100,22 @@ jobs:
     # if: github.event_name == 'release' && github.event.action == 'published'
 
     steps:
-    - uses: actions/setup-python@v4
+    - uses: actions/setup-python@v5
       with:
         python-version: "3.x"
 
-    - uses: actions/download-artifact@v3
+    - name: Download sdist artifact
+      uses: actions/download-artifact@v4
       with:
-        name: artifact
+        name: sdist-artifact
         path: dist
+
+    - name: Download all wheel artifacts
+      uses: actions/download-artifact@v4
+      with:
+        pattern: wheels-*
+        path: dist
+        merge-multiple: true
 
     - uses: pypa/gh-action-pypi-publish@release/v1
       with:
