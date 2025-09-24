@@ -65,7 +65,7 @@ jobs:
         only: ${{ matrix.only }}
       env:
         # Download dependencies for manylinux (use AlmaLinux 9 to get shaderc)
-        CIBW_MANYLINUX_IMAGE: manylinux_2_34
+        CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_34
         CIBW_BEFORE_ALL_LINUX: |
           yum -y install cmake bluez-libs-devel openssl-devel libcurl-devel freetype-devel harfbuzz-devel libjpeg-turbo-devel libogg-devel libpng-devel libvorbis-devel openal-soft-devel SDL2-devel libshaderc-devel
 
