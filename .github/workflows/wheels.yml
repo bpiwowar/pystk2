@@ -60,13 +60,13 @@ jobs:
       with:
         submodules: true
   
-    - uses: pypa/cibuildwheel@v2.20
+    - uses: pypa/cibuildwheel@v3.20
       with:
         only: ${{ matrix.only }}
       env:
         # Download dependencies for manylinux (CentOS 7)
         CIBW_BEFORE_ALL_LINUX: |
-          yum -y install cmake bluez-libs-devel openssl-devel libcurl-devel freetype-devel harfbuzz-devel libjpeg-turbo-devel libogg-devel libpng-devel libvorbis-devel openal-soft-devel SDL2-devel
+          yum -y install cmake bluez-libs-devel openssl-devel libcurl-devel freetype-devel harfbuzz-devel libjpeg-turbo-devel libogg-devel libpng-devel libvorbis-devel openal-soft-devel SDL2-devel libshaderc-devel
 
         # Download dependencies for MacOS
         # ... and try to get rid of Mono
