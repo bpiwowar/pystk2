@@ -71,8 +71,8 @@ jobs:
 
         # Download dependencies for MacOS
         # ... and try to get rid of Mono
+        MACOSX_DEPLOYMENT_TARGET: 10.11
         CIBW_BEFORE_ALL_MACOS: |
-          export MACOSX_DEPLOYMENT_TARGET=10.11
           curl  -L  "https://github.com/supertuxkart/dependencies/releases/download/preview/dependencies-macosx.tar.xz"  | tar -xv
           sudo rm -rf /Library/Frameworks/Mono.framework
         
