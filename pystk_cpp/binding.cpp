@@ -190,9 +190,14 @@ PYBIND11_MODULE(pystk2, m) {
         py::enum_<PySTKPlayerConfig::Controller>(cls, "Controller")
             .value("PLAYER_CONTROL", PySTKPlayerConfig::PLAYER_CONTROL)
             .value("AI_CONTROL", PySTKPlayerConfig::AI_CONTROL);
-        py::enum_<PySTKPlayerConfig::CameraMode>(cls, "CameraMode")
-            .value("AUTO", PySTKPlayerConfig::AUTO)
-            .value("ON", PySTKPlayerConfig::ON)
+        py::enum_<PySTKPlayerConfig::CameraMode>(cls, "CameraMode",
+                "Camera control mode (warning: the number of cameras is limited with STK):\n"
+                " - AUTO: automatically managed by the game\n"
+                " - ON:   camera is always enabled\n"
+                " - OFF:  camera is disabled"
+            )
+            .value("AUTO", PySTKPlayerConfig::AUTO, "Automatically managed by the game (first karts view).")
+            .value("ON", PySTKPlayerConfig::ON, "Camera is always enabled.")
             .value("OFF", PySTKPlayerConfig::OFF);
         
         cls
