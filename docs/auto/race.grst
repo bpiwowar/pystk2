@@ -6,7 +6,7 @@
 
    .. py:method:: __init__ (self: pystk2.Race, config: pystk2.RaceConfig)
 
-   .. py:method:: get_kart_action (self: pystk2.Race, arg0: int) -> pystk2.Action
+   .. py:method:: get_kart_action (self: pystk2.Race, arg0: SupportsInt) -> pystk2.Action
 
       Get a kart control state
 
@@ -26,7 +26,7 @@
       Overloaded function.
 
 
-      * step(self: pystk2.Race, action: List[pystk2.Action]) -> bool
+      * step(self: pystk2.Race, action: collections.abc.Sequence[pystk2.Action]) -> bool
 
 
       Take a step with an action per agent
@@ -55,7 +55,7 @@
       The current race configuration
 
 
-   .. py:property:: render_data () -> List[pystk2.RenderData]
+   .. py:property:: render_data () -> list[pystk2.RenderData]
       :annotation: property
 
       rendering data from the last step

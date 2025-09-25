@@ -51,7 +51,7 @@
       .. py:property:: value () -> int
          :annotation: property
 
-   .. py:method:: set_kart_location (kart_id: int, position: float3, rotation: Quaternion = [0.0, 0.0, 0.0, 1.0], speed: float = 0) -> None
+   .. py:method:: set_kart_location (kart_id: SupportsInt, position: float3, rotation: Quaternion = [0.0, 0.0, 0.0, 1.0], speed: SupportsFloat = 0) -> None
       :staticmethod:
 
       Move a kart to a specific location.
@@ -62,19 +62,25 @@
       Update this object with the current world state
 
 
+   .. py:property:: aux_ticks () -> int
+      :annotation: property
+
+      Ticks since ready
+
+
    .. py:property:: ffa () -> pystk2.FFA
       :annotation: property
 
       Free for all match info
 
 
-   .. py:property:: items () -> List[pystk2.Item]
+   .. py:property:: items () -> list[pystk2.Item]
       :annotation: property
 
       State of items
 
 
-   .. py:property:: karts () -> List[pystk2.Kart]
+   .. py:property:: karts () -> list[pystk2.Kart]
       :annotation: property
 
       State of karts
@@ -86,7 +92,7 @@
       World status phase
 
 
-   .. py:property:: players () -> List[pystk2.Player]
+   .. py:property:: players () -> list[pystk2.Player]
       :annotation: property
 
       State of active players
@@ -114,22 +120,28 @@
       length of the track
 
 
-   .. py:property:: path_distance () -> numpy.ndarray[numpy.float32]
+   .. py:property:: path_distance () -> numpy.typing.NDArray[numpy.float32]
       :annotation: property
 
       Distance down the track of each line segment (float N x 2)
 
 
-   .. py:property:: path_nodes () -> numpy.ndarray[numpy.float32]
+   .. py:property:: path_nodes () -> numpy.typing.NDArray[numpy.float32]
       :annotation: property
 
       Center line of the drivable area as line segments of 3d coordinates (float N x 2 x 3)
 
 
-   .. py:property:: path_width () -> numpy.ndarray[numpy.float32]
+   .. py:property:: path_width () -> numpy.typing.NDArray[numpy.float32]
       :annotation: property
 
       Width of the path segment (float N)
+
+
+   .. py:property:: successors () -> list[list[int]]
+      :annotation: property
+
+      For each node, its successors (N lists)
 
 
 .. py:class:: pystk2.Player
@@ -235,7 +247,7 @@
       Item id compatible with instance data
 
 
-   .. py:property:: location () -> numpy.ndarray[numpy.float32]
+   .. py:property:: location () -> numpy.typing.NDArray[numpy.float32]
       :annotation: property
 
       3D world location of the item
@@ -255,7 +267,7 @@
 
 .. py:class:: pystk2.Kart
 
-   .. py:property:: angular_velocity () -> numpy.ndarray[numpy.float32]
+   .. py:property:: angular_velocity () -> numpy.typing.NDArray[numpy.float32]
       :annotation: property
 
       Angular velocity of kart
@@ -291,7 +303,7 @@
       Number of laps completed
 
 
-   .. py:property:: front () -> numpy.ndarray[numpy.float32]
+   .. py:property:: front () -> numpy.typing.NDArray[numpy.float32]
       :annotation: property
 
       Front direction of kart 1/2 kart length forward from location
@@ -307,6 +319,12 @@
       :annotation: property
 
       Kart id compatible with instance labels
+
+
+   .. py:property:: is_on_road () -> bool
+      :annotation: property
+
+      Whether the kart is on track
 
 
    .. py:property:: jumping () -> bool
@@ -327,7 +345,7 @@
       Lives in three strikes battle
 
 
-   .. py:property:: location () -> numpy.ndarray[numpy.float32]
+   .. py:property:: location () -> numpy.typing.NDArray[numpy.float32]
       :annotation: property
 
       3D world location of the kart
@@ -343,6 +361,12 @@
       :annotation: property
 
       Player name
+
+
+   .. py:property:: node () -> int
+      :annotation: property
+
+      Closest node
 
 
    .. py:property:: overall_distance () -> float
@@ -375,7 +399,7 @@
       Did the kart win the race?
 
 
-   .. py:property:: rotation () -> numpy.ndarray[numpy.float32]
+   .. py:property:: rotation () -> numpy.typing.NDArray[numpy.float32]
       :annotation: property
 
       Quaternion rotation of the kart [w, x, y, z]
@@ -387,7 +411,7 @@
       Second the shield is up for
 
 
-   .. py:property:: size () -> numpy.ndarray[numpy.float32]
+   .. py:property:: size () -> numpy.typing.NDArray[numpy.float32]
       :annotation: property
 
       Width, height and length of kart
@@ -405,13 +429,13 @@
       Speed of the kart in meters/second
 
 
-   .. py:property:: velocity () -> numpy.ndarray[numpy.float32]
+   .. py:property:: velocity () -> numpy.typing.NDArray[numpy.float32]
       :annotation: property
 
       Velocity of kart
 
 
-   .. py:property:: velocity_lc () -> numpy.ndarray[numpy.float32]
+   .. py:property:: velocity_lc () -> numpy.typing.NDArray[numpy.float32]
       :annotation: property
 
       Velocity of kart (in the kart referential)
@@ -526,7 +550,7 @@
       Soccer ball information
 
 
-   .. py:property:: goal_line () -> Annotated[List[Annotated[List[float3], FixedSize(2)]], FixedSize(2)]
+   .. py:property:: goal_line () -> Annotated[list[Annotated[list[float3], 'FixedSize(2)']], 'FixedSize(2)']
       :annotation: property
 
       Start and end of the goal line for each team
@@ -546,7 +570,7 @@
       Object id of the soccer ball
 
 
-   .. py:property:: location () -> numpy.ndarray[numpy.float32]
+   .. py:property:: location () -> numpy.typing.NDArray[numpy.float32]
       :annotation: property
 
       3D world location of the item

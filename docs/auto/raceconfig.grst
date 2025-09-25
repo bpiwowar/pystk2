@@ -98,19 +98,19 @@
    Overloaded function.
 
 
-   * list_tracks() -> List[str]
+   * list_tracks() -> list[str]
 
 
    Return a list of track names (possible values for RaceConfig.track)
 
 
-   * list_tracks(arg0: pystk2.RaceConfig.RaceMode) -> List[str]
+   * list_tracks(arg0: pystk2.RaceConfig.RaceMode) -> list[str]
 
 
    Return a list of track names (possible values for RaceConfig.track)
 
 
-.. py:function:: pystk2.list_karts () -> List[str]
+.. py:function:: pystk2.list_karts () -> list[str]
 
    Return a list of karts to play as (possible values for PlayerConfig.kart
 

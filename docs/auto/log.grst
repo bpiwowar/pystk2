@@ -28,7 +28,7 @@
    .. py:attribute:: warn
       :annotation: = 3
 
-.. py:function:: pystk2.set_log_level (arg0: int) -> None
+.. py:function:: pystk2.set_log_level (arg0: SupportsInt) -> None
 
    Set the global log level
 

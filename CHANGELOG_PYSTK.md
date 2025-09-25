@@ -2,6 +2,15 @@
 
 This file documents notable changes to PySTK2 across versions since its inception.
 
+## Version 0.5.0
+
+- Track: access to the track graph (successors)
+- Kart: access to the current track index (node)
+
+## Version 0.4.0
+
+- Kart state: aux tick state (for acceleration boost)
+
 ## Version 0.3.7
 
 - Fix camera bugs
