@@ -49,7 +49,7 @@ cachedir = Path(user_cache_dir("PySuperTuxKart2", "bpiwowar"))
 
 cachedir.mkdir(parents=True, exist_ok=True)
 
-VERSION = "1.5-rc2"
+VERSION = "1.5"
 FILENAME = f"SuperTuxKart-{VERSION}-src.tar.gz"
 SUPERTUXKART_URL = f"https://github.com/supertuxkart/stk-code/releases/download/{VERSION}/{FILENAME}"
 
