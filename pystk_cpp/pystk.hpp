@@ -16,7 +16,8 @@ struct PySTKGraphicsConfig {
 	bool degraded_IBL = false;
 	int high_definition_textures = 2 | 1;
 	bool render = true;
-	
+	bool display = true;
+
 	static const PySTKGraphicsConfig & hd();
 	static const PySTKGraphicsConfig & sd();
 	static const PySTKGraphicsConfig & ld();

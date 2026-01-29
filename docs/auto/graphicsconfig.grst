@@ -106,6 +106,12 @@
       Is rendering enabled?
 
 
+   .. py:property:: display () -> bool
+      :annotation: property
+
+      Is on-screen display enabled? When ``render=True`` and ``display=False``, GPU rendering runs but the window is not updated.
+
+
    .. py:property:: screen_height () -> int
       :annotation: property
 

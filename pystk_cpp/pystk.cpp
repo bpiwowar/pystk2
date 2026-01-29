@@ -65,6 +65,7 @@
 #include "graphics/referee.hpp"
 #include "graphics/render_target.hpp"
 #include "graphics/rtts.hpp"
+#include "graphics/shader_based_renderer.hpp"
 #include "graphics/sp/sp_base.hpp"
 #include "graphics/sp/sp_shader.hpp"
 #include "graphics/sp/sp_texture_manager.hpp"
@@ -106,6 +107,10 @@
 #include "tips/tips_manager.hpp"
 #include "utils/translation.hpp"
 #include "fake_input_device.hpp"
+
+#ifndef SERVER_ONLY
+#include "../lib/irrlicht/source/Irrlicht/CIrrDeviceSDL.h"
+#endif
 
 #ifdef RENDERDOC
 #include "renderdoc_app.h"
@@ -169,7 +174,8 @@ const PySTKGraphicsConfig & PySTKGraphicsConfig::none() {
                                          false, // ssao
                                          false, // degraded_IBL
                                          0,     // high_definition_textures
-                                         false,   // render
+                                         false, // render
+                                         false, // display
     };
     return config;
 }
@@ -304,8 +310,9 @@ std::vector<std::string> PySTKRace::listKarts() {
 }
 PySTKRace::~PySTKRace() {
     Log::debug("pystk", "Destroying PySTK Race");
-    
-    // Exit race if this has not been done yet
+#ifndef SERVER_ONLY
+    render_targets_.clear();
+#endif
     if (World::getWorld()) {
         RaceManager::get()->exitRace();
     }
@@ -443,22 +450,22 @@ void PySTKRace::start() {
     PlayerManager::get();
 
 
-// FIXME: put back graphics fetching for now
-// (bug: pointer freed two times)
-#if !defined(SERVER_ONLY) and false
-    // Setup the cameras to follow each player
+#if !defined(SERVER_ONLY)
     if (!GUIEngine::isReallyNoGraphics()) {
+        auto* renderer = dynamic_cast<ShaderBasedRenderer*>(irr_driver->getRenderer());
+        RTT* saved_rtts = renderer ? renderer->getRTTs() : nullptr;
+
         for(unsigned long int i=0; i<Camera::getNumCameras(); i++) {
-            
             auto render_target = irr_driver->createRenderTarget(
-                {(unsigned int)UserConfigParams::m_width, (unsigned int)UserConfigParams::m_height}, "Player "+std::to_string(i)
+                {(unsigned int)UserConfigParams::m_width, (unsigned int)UserConfigParams::m_height},
+                "Player " + std::to_string(i)
             );
-            
             Camera::getCamera(i)->activate(false);
             render_target->renderToTexture(Camera::getCamera(i)->getCameraSceneNode(), 0.);
-
             render_targets_.push_back(std::make_unique<PySTKRenderTarget>(std::move(render_target)));
         }
+
+        if (renderer) renderer->setRTT(saved_rtts);
     }
 #endif  // SERVER_ONLY
     time_leftover_ = 0.f;
@@ -481,6 +488,14 @@ void PySTKRace::start() {
         core::stringw player_name(config_.players[i].name.c_str());
         kart->setOnScreenText(player_name);
     }
+
+    // Set on-screen names for all remaining (non-player) AI karts
+    for(int i=config_.players.size(); i<World::getWorld()->getNumKarts(); i++) {
+        AbstractKart * kart = World::getWorld()->getKart(i);
+        core::stringw kart_name(kart->getName());
+        kart->setOnScreenText(kart_name);
+    }
+
     ItemManager::updateRandomSeed(config_.seed);
     powerup_manager->setRandomSeed(config_.seed);
 }
@@ -510,14 +525,20 @@ void PySTKRace::render(float dt) {
 #ifndef SERVER_ONLY
     if (world && !GUIEngine::isReallyNoGraphics())
     {
+        auto* renderer = dynamic_cast<ShaderBasedRenderer*>(irr_driver->getRenderer());
+        RTT* saved_rtts = renderer ? renderer->getRTTs() : nullptr;
+
         // Render all views
         for(unsigned int i = 0; i < Camera::getNumCameras() && i < render_targets_.size(); i++) {
             Camera::getCamera(i)->activate(false);
             render_targets_[i]->render(Camera::getCamera(i)->getCameraSceneNode(), dt);
         }
-        while (render_data_.size() < render_targets_.size()) 
+
+        if (renderer) renderer->setRTT(saved_rtts);
+
+        while (render_data_.size() < render_targets_.size())
             render_data_.push_back( std::make_shared<PySTKRenderData>() );
-        
+
         // Fetch all views
         for(unsigned int i = 0; i < render_targets_.size(); i++) {
             render_targets_[i]->fetch(render_data_[i]);
@@ -586,10 +607,11 @@ bool PySTKRace::step() {
     if (PyGlobalEnvironment::graphics_config().render) {
         World::getWorld()->updateGraphics(dt);
 
-        irr_driver->update(dt);
+        if (PyGlobalEnvironment::graphics_config().display) {
+            irr_driver->update(dt);
+        }
+
         render(dt);
-    } else {
-        // World::getWorld()->updateGraphics(dt);
     }
 
     if (PyGlobalEnvironment::graphics_config().render && !irr_driver->getDevice()->run())
@@ -808,6 +830,15 @@ void PyGlobalEnvironment::initRest()
     irr_driver = new IrrDriver();
     // Now create the actual non-null device in the irrlicht driver
     irr_driver->initDevice();
+
+#ifndef SERVER_ONLY
+    // Hide the window when rendering without display
+    if (graphics_config_.render && !graphics_config_.display) {
+        auto* sdl_device = dynamic_cast<irr::CIrrDeviceSDL*>(irr_driver->getDevice());
+        if (sdl_device && sdl_device->getWindow())
+            SDL_HideWindow(sdl_device->getWindow());
+    }
+#endif
 
     StkTime::init();   // grabs the timer object from the irrlicht device
 

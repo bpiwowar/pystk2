@@ -525,6 +525,7 @@ public:
     }   // addDebugMesh
 
 #endif
+    AbstractRenderer* getRenderer() { return m_renderer; }
     void onLoadWorld();
     void onUnloadWorld();
 

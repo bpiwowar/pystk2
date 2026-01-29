@@ -39,9 +39,18 @@ Next, let's start the race and play for a 100 steps.
     race.start()
     for n in range(100):
         race_ended = race.step()
-        # Optionally display race.render_data
-    
-See :ref:`race` for a full documentation of the race object and the render_data.
+
+After each step, you can access rendered images through ``race.render_data``.
+Each entry corresponds to one camera and provides color, depth, and instance segmentation buffers:
+
+.. code-block:: python
+
+    for data in race.render_data:
+        color = data.image       # uint8 array (H x W x 3)
+        depth = data.depth       # float array (H x W)
+        labels = data.instance   # uint32 array (H x W)
+
+See :ref:`race` for a full documentation of the race object and :ref:`data` for the render data format.
 
 Finally, delete the current race object before exiting or starting a new race.
 

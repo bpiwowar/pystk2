@@ -120,7 +120,6 @@ GL3RenderTarget::GL3RenderTarget(const irr::core::dimension2du &dimension,
 GL3RenderTarget::~GL3RenderTarget()
 {
     delete m_rtts;
-    m_renderer->setRTT(NULL);
 }   // ~GL3RenderTarget
 
 //-----------------------------------------------------------------------------

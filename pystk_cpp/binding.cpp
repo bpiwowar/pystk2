@@ -158,7 +158,7 @@ PYBIND11_MODULE(pystk2, m) {
     {
         py::class_<PySTKGraphicsConfig, std::shared_ptr<PySTKGraphicsConfig>> cls(m, "GraphicsConfig", "SuperTuxKart graphics configuration.");
         
-        cls.def(py::init<int, int, int, bool, bool, bool, bool, bool, int, bool, bool, bool, bool, bool, bool, int, bool>(), py::arg("screen_width") = 600, py::arg("screen_height") = 400, py::arg("display_adapter") = 0, py::arg("glow") = false, py::arg("") = true, py::arg("") = true, py::arg("") = true, py::arg("") = true, py::arg("particles_effects") = 2, py::arg("animated_characters") = true, py::arg("motionblur") = true, py::arg("mlaa") = true, py::arg("texture_compression") = true, py::arg("ssao") = true, py::arg("degraded_IBL") = false, py::arg("high_definition_textures") = 2 | 1, py::arg("render") = true)
+        cls.def(py::init<int, int, int, bool, bool, bool, bool, bool, int, bool, bool, bool, bool, bool, bool, int, bool, bool>(), py::arg("screen_width") = 600, py::arg("screen_height") = 400, py::arg("display_adapter") = 0, py::arg("glow") = false, py::arg("") = true, py::arg("") = true, py::arg("") = true, py::arg("") = true, py::arg("particles_effects") = 2, py::arg("animated_characters") = true, py::arg("motionblur") = true, py::arg("mlaa") = true, py::arg("texture_compression") = true, py::arg("ssao") = true, py::arg("degraded_IBL") = false, py::arg("high_definition_textures") = 2 | 1, py::arg("render") = true, py::arg("display") = true)
         .def_readwrite("screen_width", &PySTKGraphicsConfig::screen_width, "Width of the rendering surface")
         .def_readwrite("screen_height", &PySTKGraphicsConfig::screen_height, "Height of the rendering surface")
         .def_readwrite("display_adapter", &PySTKGraphicsConfig::display_adapter, "GPU to use (Linux only)")
@@ -175,7 +175,8 @@ PYBIND11_MODULE(pystk2, m) {
         .def_readwrite("ssao", &PySTKGraphicsConfig::ssao, "Enable screen space ambient occlusion")
         .def_readwrite("degraded_IBL", &PySTKGraphicsConfig::degraded_IBL, "Disable specular IBL")
         .def_readwrite("high_definition_textures", &PySTKGraphicsConfig::high_definition_textures, "Enable high definition textures 0 / 2")
-        .def_readwrite("render", &PySTKGraphicsConfig::render, "Is rendering enabled?");
+        .def_readwrite("render", &PySTKGraphicsConfig::render, "Is rendering enabled?")
+        .def_readwrite("display", &PySTKGraphicsConfig::display, "Is on-screen display enabled? When render=True and display=False, GPU rendering runs but the window is not updated.");
         add_pickle(cls);
         
         cls.def_static("hd", &PySTKGraphicsConfig::hd, "High-definitaiton graphics settings");
