@@ -53,11 +53,17 @@ void unpickle(std::istream & s, PySTKGraphicsConfig * o) {
 }
 void pickle(std::ostream & s, const PySTKPlayerConfig & o) {
     pickle(s, o.kart);
+    pickle(s, o.name);
     pickle(s, o.controller);
+    pickle(s, o.cameraMode);
+    pickle(s, o.team);
 }
 void unpickle(std::istream & s, PySTKPlayerConfig * o) {
     unpickle(s, &o->kart);
+    unpickle(s, &o->name);
     unpickle(s, &o->controller);
+    unpickle(s, &o->cameraMode);
+    unpickle(s, &o->team);
 }
 void pickle(std::ostream & s, const PySTKRaceConfig & o) {
     pickle(s, o.difficulty);
