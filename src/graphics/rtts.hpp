@@ -116,6 +116,10 @@ public:
         assert(m_depth_stencil_tex != 0);
         return m_depth_stencil_tex;
     }
+    bool hasRenderTarget(enum TypeRTT target) const
+    {
+        return m_render_target_textures[target] != 0;
+    }
     unsigned getRenderTarget(enum TypeRTT target) const
     {
         assert(m_render_target_textures[target] != 0);

@@ -129,11 +129,14 @@ def main():
     parser.add_argument("-t", "--track", default="lighthouse", help="Track name (default: lighthouse)")
     parser.add_argument("--no-display", action="store_true", help="Use render=True, display=False mode")
     parser.add_argument("--graphics", choices=["hd", "sd", "ld"], default="hd", help="Graphics preset (default: hd)")
+    parser.add_argument("--size", type=int, nargs=2, metavar=("WIDTH", "HEIGHT"), default=None, help="Render resolution (default: 600 400)")
     args = parser.parse_args()
 
     presets = {"hd": pystk2.GraphicsConfig.hd, "sd": pystk2.GraphicsConfig.sd, "ld": pystk2.GraphicsConfig.ld}
     print(f"Initializing pystk2 with {args.graphics.upper()} graphics...")
     gfx = presets[args.graphics]()
+    if args.size:
+        gfx.screen_width, gfx.screen_height = args.size
     if args.no_display:
         gfx.display = False
     pystk2.init(gfx)

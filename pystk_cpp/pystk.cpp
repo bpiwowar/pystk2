@@ -226,10 +226,17 @@ void PySTKRenderTarget::fetch(std::shared_ptr<PySTKRenderData> data) {
             data->color_buf_ = color_buf_[buf_num_];
             data->depth_buf_ = depth_buf_[buf_num_];
             data->instance_buf_ = instance_buf_[buf_num_];
-            
+
             data->depth_buf_->read(rtts->getDepthStencilTexture());
-            data->color_buf_->read(rtts->getRenderTarget(RTT_COLOR));
-            data->instance_buf_->read(rtts->getRenderTarget(RTT_LENS_128));
+            // Read from the post-processed frame buffer (tone mapping, bloom, etc.)
+            // rather than the raw RTT_COLOR which is linear HDR pre-post-processing
+            FrameBuffer* fb = rt_gl3->getFrameBuffer();
+            if (fb && !fb->getRTT().empty())
+                data->color_buf_->read(fb->getRTT()[0]);
+            else
+                data->color_buf_->read(rtts->getRenderTarget(RTT_COLOR));
+            if (rtts->hasRenderTarget(RTT_LENS_128))
+                data->instance_buf_->read(rtts->getRenderTarget(RTT_LENS_128));
             buf_num_ = (buf_num_+1) % BUF_SIZE;
         }
     }
@@ -771,6 +778,8 @@ PySTKGraphicsConfig const & PyGlobalEnvironment::graphics_config() {
 void PyGlobalEnvironment::initGraphicsConfig(const PySTKGraphicsConfig & config) {
     UserConfigParams::m_width  = config.screen_width;
     UserConfigParams::m_height = config.screen_height;
+    UserConfigParams::m_real_width  = config.screen_width;
+    UserConfigParams::m_real_height = config.screen_height;
     UserConfigParams::m_glow = config.glow;
     UserConfigParams::m_bloom = config.bloom;
     UserConfigParams::m_light_shaft = config.light_shaft;
