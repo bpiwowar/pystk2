@@ -104,6 +104,8 @@
 #include "objecttype.hpp"
 #include "util.hpp"
 #include "buffer.hpp"
+#include "states_screens/race_gui_base.hpp"
+#include "font/font_drawer.hpp"
 #include "tips/tips_manager.hpp"
 #include "utils/translation.hpp"
 #include "fake_input_device.hpp"
@@ -542,6 +544,54 @@ void PySTKRace::render(float dt) {
         }
 
         if (renderer) renderer->setRTT(saved_rtts);
+
+        // Render HUD overlay into each camera's FBO
+        if (config_.overlay) {
+            RaceGUIBase *rg = world->getRaceGUI();
+            if (rg) {
+                // Update the GUI state when display is off
+                // (when display is on, ShaderBasedRenderer::render already called it)
+                if (!PyGlobalEnvironment::graphics_config().display) {
+                    rg->update(dt);
+                }
+
+                for(unsigned int i = 0; i < Camera::getNumCameras() && i < render_targets_.size(); i++) {
+                    Camera *camera = Camera::getCamera(i);
+                    auto rt_gl3 = dynamic_cast<GL3RenderTarget*>(render_targets_[i]->rt_.get());
+                    if (!rt_gl3) continue;
+
+                    FrameBuffer *fb = rt_gl3->getFrameBuffer();
+                    if (!fb) continue;
+
+                    // Bind the camera's output FBO so 2D draws go there
+                    fb->bind();
+
+                    // Save camera viewport/scaling, override to full RTT size
+                    core::recti saved_vp = camera->getViewport();
+                    core::vector2df saved_scaling = camera->getScaling();
+                    int fb_w = fb->getWidth();
+                    int fb_h = fb->getHeight();
+                    camera->setViewport(core::recti(0, 0, fb_w, fb_h));
+                    camera->setScaling(core::vector2df(1.0f, 1.0f));
+
+                    // Enable 2D material mode for GUI drawing
+                    irr_driver->getVideoDriver()->enableMaterial2D();
+
+                    camera->activate(false);
+                    rg->renderPlayerView(camera, dt);
+                    rg->renderGlobal(dt);
+
+                    irr_driver->getVideoDriver()->enableMaterial2D(false);
+
+                    // Restore camera viewport/scaling
+                    camera->setViewport(saved_vp);
+                    camera->setScaling(saved_scaling);
+
+                    // Unbind FBO back to default
+                    glBindFramebuffer(GL_FRAMEBUFFER, irr_driver->getDefaultFramebuffer());
+                }
+            }
+        }
 
         while (render_data_.size() < render_targets_.size())
             render_data_.push_back( std::make_shared<PySTKRenderData>() );

@@ -60,6 +60,7 @@ struct PySTKRaceConfig {
 	int num_kart = 1;
 	float step_size = 0.1;
 	int num_cameras = 0;
+	bool overlay = true;
 };
 
 class PySTKRenderTarget;

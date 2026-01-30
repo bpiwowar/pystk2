@@ -219,8 +219,16 @@ public:
     const core::recti& getViewport() const {return m_viewport; }
 
     // ------------------------------------------------------------------------
+    /** Sets the viewport of this camera. */
+    void setViewport(const core::recti& vp) { m_viewport = vp; }
+
+    // ------------------------------------------------------------------------
     /** Returns the scaling in x/y direction for this camera. */
     const core::vector2df& getScaling() const {return m_scaling; }
+
+    // ------------------------------------------------------------------------
+    /** Sets the scaling in x/y direction for this camera. */
+    void setScaling(const core::vector2df& s) { m_scaling = s; }
 
     // ------------------------------------------------------------------------
     /** Returns the camera scene node. */

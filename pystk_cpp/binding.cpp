@@ -226,7 +226,7 @@ PYBIND11_MODULE(pystk2, m) {
             .value("SOCCER", PySTKRaceConfig::RaceMode::SOCCER);
         
         cls
-        .def(py::init<int,PySTKRaceConfig::RaceMode,std::vector<PySTKPlayerConfig>,std::string,bool,int,int,int,float>(), py::arg("difficulty") = 2, py::arg("mode") = PySTKRaceConfig::NORMAL_RACE, py::arg("players") = std::vector<PySTKPlayerConfig>{{"","",PySTKPlayerConfig::PLAYER_CONTROL}}, py::arg("track") = "", py::arg("reverse") = false, py::arg("laps") = 3, py::arg("seed") = 0, py::arg("num_kart") = 1, py::arg("step_size") = 0.1)
+        .def(py::init<int,PySTKRaceConfig::RaceMode,std::vector<PySTKPlayerConfig>,std::string,bool,int,int,int,float,int,bool>(), py::arg("difficulty") = 2, py::arg("mode") = PySTKRaceConfig::NORMAL_RACE, py::arg("players") = std::vector<PySTKPlayerConfig>{{"","",PySTKPlayerConfig::PLAYER_CONTROL}}, py::arg("track") = "", py::arg("reverse") = false, py::arg("laps") = 3, py::arg("seed") = 0, py::arg("num_kart") = 1, py::arg("step_size") = 0.1, py::arg("num_cameras") = 0, py::arg("overlay") = true)
         .def_readwrite("difficulty", &PySTKRaceConfig::difficulty, "Skill of AI players 0..2")
         .def_readwrite("mode", &PySTKRaceConfig::mode, "Specify the type of race")
         .def_readwrite("players", &PySTKRaceConfig::players, "List of all agent players")
@@ -236,7 +236,8 @@ PYBIND11_MODULE(pystk2, m) {
         .def_readwrite("seed", &PySTKRaceConfig::seed, "Random seed")
         .def_readwrite("num_kart", &PySTKRaceConfig::num_kart, "Total number of karts, fill the race with num_kart - len(players) AI karts")
         .def_readwrite("step_size", &PySTKRaceConfig::step_size, "Game time between different step calls")
-        .def_readwrite("num_cameras", &PySTKRaceConfig::num_cameras, "Number of cameras to follow the first karts (0 for none)");
+        .def_readwrite("num_cameras", &PySTKRaceConfig::num_cameras, "Number of cameras to follow the first karts (0 for none)")
+        .def_readwrite("overlay", &PySTKRaceConfig::overlay, "Render HUD overlay (position, lap, speed, timer, minimap) into captured images");
         add_pickle(cls);
     }
 
