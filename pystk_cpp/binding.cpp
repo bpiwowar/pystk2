@@ -284,7 +284,7 @@ PYBIND11_MODULE(pystk2, m) {
 #ifdef SERVER_ONLY
 .def_property_readonly("render_data", [](const PySTKRace &) -> py::list {return py::list();}, "rendering data from the last step")
 #else
-        .def_property_readonly("render_data", &PySTKRace::render_data, "rendering data from the last step")
+        .def_property_readonly("render_data", [](PySTKRace &self) -> const std::vector<std::shared_ptr<PySTKRenderData>> & { return self.render_data(); }, "rendering data from the last step")
         .def("screen_capture", &PySTKRace::screen_capture, "Capture the full screen (split-screen view) as displayed. Only works when display=True. Returns numpy array (height, width, 3) uint8.")
 #endif  // SERVER_ONLY
         .def_property_readonly("config", &PySTKRace::config,"The current race configuration");

@@ -130,10 +130,18 @@ protected:
 	bool activePlayerCamera(size_t player_ix);
 	void setupConfig(const PySTKRaceConfig & config);
 	void setupRaceStart();
-	void render(float dt);
+	void renderScreen(float dt);
+	void renderCameras(float dt);
 #ifndef SERVER_ONLY
 	std::vector<std::unique_ptr<PySTKRenderTarget> > render_targets_;
 	std::vector<std::shared_ptr<PySTKRenderData> > render_data_;
+	bool render_data_dirty_ = true;
+	float last_dt_ = 0;
+	unsigned int screen_pbo_ = 0;
+	std::vector<uint8_t> bgra_staging_;
+	int screen_capture_w_ = 0;
+	int screen_capture_h_ = 0;
+	void freeScreenCaptureBuffers();
 #endif  // SERVER_ONLY
 	PySTKRaceConfig config_;
 	float time_leftover_ = 0;
@@ -150,7 +158,7 @@ public:
 	bool step();
 	void stop();
 #ifndef SERVER_ONLY
-	const std::vector<std::shared_ptr<PySTKRenderData> > & render_data() const { return render_data_; }
+	const std::vector<std::shared_ptr<PySTKRenderData> > & render_data();
 	py::array screen_capture();
 #endif  // SERVER_ONLY
 	const PySTKRaceConfig & config() const { return config_; }

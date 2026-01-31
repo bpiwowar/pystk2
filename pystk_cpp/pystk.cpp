@@ -320,6 +320,7 @@ std::vector<std::string> PySTKRace::listKarts() {
 PySTKRace::~PySTKRace() {
     Log::debug("pystk", "Destroying PySTK Race");
 #ifndef SERVER_ONLY
+    freeScreenCaptureBuffers();
     render_targets_.clear();
 #endif
     if (World::getWorld()) {
@@ -327,6 +328,18 @@ PySTKRace::~PySTKRace() {
     }
     running_kart = nullptr;
 }
+
+#ifndef SERVER_ONLY
+void PySTKRace::freeScreenCaptureBuffers() {
+    if (screen_pbo_) {
+        glDeleteBuffers(1, &screen_pbo_);
+        screen_pbo_ = 0;
+    }
+    bgra_staging_.clear();
+    screen_capture_w_ = 0;
+    screen_capture_h_ = 0;
+}
+#endif  // SERVER_ONLY
 
 /**
  * @brief Wrapper around a AI Controller
@@ -510,6 +523,7 @@ void PySTKRace::start() {
 }
 void PySTKRace::stop() {
 #ifndef SERVER_ONLY
+    freeScreenCaptureBuffers();
     render_targets_.clear();
 #endif  // SERVER_ONLY
     if (World::getWorld())
@@ -529,7 +543,15 @@ PySTKAction PySTKRace::getKartAction(std::size_t kart_ix) {
 }
 
 
-void PySTKRace::render(float dt) {
+void PySTKRace::renderScreen(float dt) {
+#ifndef SERVER_ONLY
+    if (!GUIEngine::isReallyNoGraphics() && PyGlobalEnvironment::graphics_config().display) {
+        irr_driver->update(dt);
+    }
+#endif  // SERVER_ONLY
+}
+
+void PySTKRace::renderCameras(float dt) {
     World *world = World::getWorld();
 #ifndef SERVER_ONLY
     if (world && !GUIEngine::isReallyNoGraphics())
@@ -605,6 +627,16 @@ void PySTKRace::render(float dt) {
 }
 
 #ifndef SERVER_ONLY
+const std::vector<std::shared_ptr<PySTKRenderData> > & PySTKRace::render_data() {
+    if (render_data_dirty_) {
+        renderCameras(last_dt_);
+        render_data_dirty_ = false;
+    }
+    return render_data_;
+}
+#endif  // SERVER_ONLY
+
+#ifndef SERVER_ONLY
 py::array PySTKRace::screen_capture() {
     World *world = World::getWorld();
     if (!world) {
@@ -612,10 +644,9 @@ py::array PySTKRace::screen_capture() {
         return py::array();
     }
 
-    // Trigger a screen render even if display is off
+    // Trigger a screen render if display is off (need the default framebuffer)
     bool display_was_off = !PyGlobalEnvironment::graphics_config().display;
     if (display_was_off) {
-        // Temporarily render to screen to capture it
         irr_driver->update(0);
     }
 
@@ -626,35 +657,48 @@ py::array PySTKRace::screen_capture() {
             glBindFramebuffer(GL_FRAMEBUFFER, irr_driver->getDefaultFramebuffer());
             irr_driver->getVideoDriver()->enableMaterial2D();
 
-            // Render per-camera overlays
             for(unsigned int i = 0; i < Camera::getNumCameras(); i++) {
                 Camera *camera = Camera::getCamera(i);
                 camera->activate(false);
                 rg->renderPlayerView(camera, 0);
             }
-
-            // Render global overlays
             rg->renderGlobal(0);
 
             irr_driver->getVideoDriver()->enableMaterial2D(false);
         }
     }
 
-    // Read from the default framebuffer (back buffer)
+    int w = UserConfigParams::m_width;
+    int h = UserConfigParams::m_height;
+
+    // Lazy-init PBO + staging buffer (or re-create on resolution change)
+    if (screen_pbo_ == 0 || screen_capture_w_ != w || screen_capture_h_ != h) {
+        freeScreenCaptureBuffers();
+        screen_capture_w_ = w;
+        screen_capture_h_ = h;
+        glGenBuffers(1, &screen_pbo_);
+        glBindBuffer(GL_PIXEL_PACK_BUFFER, screen_pbo_);
+        glBufferData(GL_PIXEL_PACK_BUFFER, w * h * 4, NULL, GL_STREAM_READ);
+        glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+        bgra_staging_.resize(w * h * 4);
+    }
+
+    // Read from the default framebuffer as BGRA (GPU-native format)
     GLuint default_fbo = irr_driver->getDefaultFramebuffer();
     glBindFramebuffer(GL_READ_FRAMEBUFFER, default_fbo);
     glReadBuffer(GL_BACK);
+    glBindBuffer(GL_PIXEL_PACK_BUFFER, screen_pbo_);
+    glReadPixels(0, 0, w, h, GL_BGRA, GL_UNSIGNED_BYTE, 0);
 
-    // Read pixels directly into CPU memory via glReadPixels
-    py::array_t<unsigned char, py::array::c_style> img(
-        {(py::ssize_t)UserConfigParams::m_height, (py::ssize_t)UserConfigParams::m_width, (py::ssize_t)3});
-    glReadPixels(0, 0, UserConfigParams::m_width, UserConfigParams::m_height,
-                 GL_RGB, GL_UNSIGNED_BYTE, img.mutable_data());
-
+    // Transfer PBO → CPU staging buffer
+    glGetBufferSubData(GL_PIXEL_PACK_BUFFER, 0, w * h * 4, bgra_staging_.data());
+    glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
     glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 
-    // Y-flip the image
-    _yflip(img.mutable_data(), img.shape()[0], img.strides()[0]);
+    // Convert BGRA → RGB with Y-flip into a fresh numpy array
+    py::array_t<unsigned char, py::array::c_style> img(
+        {(py::ssize_t)h, (py::ssize_t)w, (py::ssize_t)3});
+    _bgra_to_rgb_yflip(bgra_staging_.data(), img.mutable_data(), w, h);
 
     return img;
 }
@@ -715,16 +759,15 @@ bool PySTKRace::step() {
     }
 
     PropertyAnimator::get()->update(dt);
-    
+
     // Then render
     if (PyGlobalEnvironment::graphics_config().render) {
         World::getWorld()->updateGraphics(dt);
-
-        if (PyGlobalEnvironment::graphics_config().display) {
-            irr_driver->update(dt);
-        }
-
-        render(dt);
+        renderScreen(dt);
+#ifndef SERVER_ONLY
+        last_dt_ = dt;
+        render_data_dirty_ = true;
+#endif
     }
 
     if (PyGlobalEnvironment::graphics_config().render && !irr_driver->getDevice()->run())

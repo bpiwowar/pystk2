@@ -38,3 +38,20 @@ void _yflip(void * data, size_t height, size_t row_bytes) {
 // 		swap(D+i*row_bytes, D+(height-1-i)*row_bytes, row_bytes);
 }
 
+void _bgra_to_rgb_yflip(const void* src_bgra, void* dst_rgb,
+                         size_t width, size_t height) {
+	const uint8_t* src = static_cast<const uint8_t*>(src_bgra);
+	uint8_t* dst = static_cast<uint8_t*>(dst_rgb);
+	const size_t src_stride = width * 4;
+	const size_t dst_stride = width * 3;
+	for (size_t y = 0; y < height; y++) {
+		const uint8_t* src_row = src + (height - 1 - y) * src_stride;
+		uint8_t* dst_row = dst + y * dst_stride;
+		for (size_t x = 0; x < width; x++) {
+			dst_row[x * 3 + 0] = src_row[x * 4 + 2]; // R from BGRA[2]
+			dst_row[x * 3 + 1] = src_row[x * 4 + 1]; // G from BGRA[1]
+			dst_row[x * 3 + 2] = src_row[x * 4 + 0]; // B from BGRA[0]
+		}
+	}
+}
+
