@@ -38,6 +38,7 @@ struct PySTKPlayerConfig {
 	Controller controller;
 	CameraMode cameraMode = CameraMode::AUTO;
 	int team = 0;
+	float color = 0.0f;
 };
 struct PySTKRaceConfig {
 	enum RaceMode: uint8_t {

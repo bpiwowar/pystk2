@@ -202,12 +202,13 @@ PYBIND11_MODULE(pystk2, m) {
             .value("OFF", PySTKPlayerConfig::OFF);
         
         cls
-        .def(py::init<const std::string&, const std::string&, PySTKPlayerConfig::Controller, PySTKPlayerConfig::CameraMode, int>(), py::arg("kart")="", py::arg("name")="", py::arg("controller")=PySTKPlayerConfig::PLAYER_CONTROL, py::arg("camera_mode")=PySTKPlayerConfig::AUTO, py::arg("team")=0)
+        .def(py::init<const std::string&, const std::string&, PySTKPlayerConfig::Controller, PySTKPlayerConfig::CameraMode, int, float>(), py::arg("kart")="", py::arg("name")="", py::arg("controller")=PySTKPlayerConfig::PLAYER_CONTROL, py::arg("camera_mode")=PySTKPlayerConfig::AUTO, py::arg("team")=0, py::arg("color")=0.0f)
         .def_readwrite("kart", &PySTKPlayerConfig::kart, "Kart type, see list_karts for a list of kart types" )
         .def_readwrite("name", &PySTKPlayerConfig::name, "Name of the player" )
         .def_readwrite("controller", &PySTKPlayerConfig::controller, "Let the player (PLAYER_CONTROL) or AI (AI_CONTROL) drive. The AI ignores actions in step(action)." )
         .def_readwrite("camera_mode", &PySTKPlayerConfig::cameraMode, "Sets the camera on or off. If auto, use a camera for PLAYER_CONTROL only." )
-        .def_readwrite("team", &PySTKPlayerConfig::team, "Team of the player 0 or 1" );
+        .def_readwrite("team", &PySTKPlayerConfig::team, "Team of the player 0 or 1" )
+        .def_readwrite("color", &PySTKPlayerConfig::color, "Kart color hue shift in [0, 1]. 0 uses the kart's default color." );
         add_pickle(cls);
 
         py::bind_vector<std::vector<PySTKPlayerConfig>>(m, "VectorPlayerConfig");

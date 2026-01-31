@@ -806,8 +806,8 @@ void PySTKRace::setupConfig(const PySTKRaceConfig & config) {
         race_manager->setPlayerKart(i, kart);
         race_manager->setKartTeam(i, (KartTeam)config.players[i].team);
 
-        auto kart_info = race_manager->getKartInfo(i);
-        kart_info.setDefaultKartColor(0.5);
+        auto & kart_info = race_manager->getKartInfo(i);
+        kart_info.setDefaultKartColor(config.players[i].color);
         // kart_info.setPlayerName(std::wstring_convert<char>(config.players[i].name));
     }
 
