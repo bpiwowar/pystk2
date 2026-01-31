@@ -130,6 +130,7 @@ def main():
     parser.add_argument("--no-display", action="store_true", help="Use render=True, display=False mode")
     parser.add_argument("--graphics", choices=["hd", "sd", "ld"], default="hd", help="Graphics preset (default: hd)")
     parser.add_argument("--size", type=int, nargs=2, metavar=("WIDTH", "HEIGHT"), default=None, help="Render resolution (default: 600 400)")
+    parser.add_argument("--screen-capture", metavar="FILE", help="Save screen capture to FILE and exit (e.g., screen.png)")
     args = parser.parse_args()
 
     presets = {"hd": pystk2.GraphicsConfig.hd, "sd": pystk2.GraphicsConfig.sd, "ld": pystk2.GraphicsConfig.ld}
@@ -167,7 +168,7 @@ def main():
 
     print(f"\n[step {step_count}, cam {cam}/{num_cams}]")
     print("  space=step  <N>=step N  d=depth  i=instance  c=color  a=all")
-    print("  t=tile all  n/p=next/prev cam  q=quit")
+    print("  t=tile all  s=screen (split-screen)  n/p=next/prev cam  q=quit")
 
     try:
         while True:
@@ -210,6 +211,12 @@ def main():
                 if rd:
                     imgs = [Image.fromarray(np.array(rd[j].image)) for j in range(len(rd))]
                     imgcat(tile_images(imgs), "tile")
+            elif key == "s":
+                screen = race.screen_capture()
+                if screen is not None and screen.size > 0:
+                    imgcat(Image.fromarray(np.array(screen)), "screen")
+                else:
+                    print("  screen_capture failed (display=False?)")
             elif key == "n":
                 cam = (cam + 1) % num_cams if num_cams > 0 else 0
                 print(f"  cam {cam}")

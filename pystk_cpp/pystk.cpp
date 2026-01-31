@@ -604,6 +604,62 @@ void PySTKRace::render(float dt) {
 #endif  // SERVER_ONLY
 }
 
+#ifndef SERVER_ONLY
+py::array PySTKRace::screen_capture() {
+    World *world = World::getWorld();
+    if (!world) {
+        Log::warn("pystk", "screen_capture() called but no world");
+        return py::array();
+    }
+
+    // Trigger a screen render even if display is off
+    bool display_was_off = !PyGlobalEnvironment::graphics_config().display;
+    if (display_was_off) {
+        // Temporarily render to screen to capture it
+        irr_driver->update(0);
+    }
+
+    // If overlay is enabled, render the HUD on top of the screen buffer
+    if (config_.overlay) {
+        RaceGUIBase *rg = world->getRaceGUI();
+        if (rg) {
+            glBindFramebuffer(GL_FRAMEBUFFER, irr_driver->getDefaultFramebuffer());
+            irr_driver->getVideoDriver()->enableMaterial2D();
+
+            // Render per-camera overlays
+            for(unsigned int i = 0; i < Camera::getNumCameras(); i++) {
+                Camera *camera = Camera::getCamera(i);
+                camera->activate(false);
+                rg->renderPlayerView(camera, 0);
+            }
+
+            // Render global overlays
+            rg->renderGlobal(0);
+
+            irr_driver->getVideoDriver()->enableMaterial2D(false);
+        }
+    }
+
+    // Read from the default framebuffer (back buffer)
+    GLuint default_fbo = irr_driver->getDefaultFramebuffer();
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, default_fbo);
+    glReadBuffer(GL_BACK);
+
+    // Read pixels directly into CPU memory via glReadPixels
+    std::vector<ssize_t> shape = {UserConfigParams::m_height, UserConfigParams::m_width, 3};
+    py::array_t<unsigned char, py::array::c_style> img(shape);
+    glReadPixels(0, 0, UserConfigParams::m_width, UserConfigParams::m_height,
+                 GL_RGB, GL_UNSIGNED_BYTE, img.mutable_data());
+
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+
+    // Y-flip the image
+    _yflip(img.mutable_data(), img.shape()[0], img.strides()[0]);
+
+    return img;
+}
+#endif  // SERVER_ONLY
+
 bool PySTKRace::step(const std::vector<PySTKAction> & a) {
     if (a.size() != m_controlled.size())
         throw std::invalid_argument("Expected " + std::to_string(m_controlled.size()) + " actions, got " + std::to_string(a.size()));
