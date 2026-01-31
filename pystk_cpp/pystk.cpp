@@ -646,8 +646,8 @@ py::array PySTKRace::screen_capture() {
     glReadBuffer(GL_BACK);
 
     // Read pixels directly into CPU memory via glReadPixels
-    std::vector<ssize_t> shape = {UserConfigParams::m_height, UserConfigParams::m_width, 3};
-    py::array_t<unsigned char, py::array::c_style> img(shape);
+    py::array_t<unsigned char, py::array::c_style> img(
+        {(py::ssize_t)UserConfigParams::m_height, (py::ssize_t)UserConfigParams::m_width, (py::ssize_t)3});
     glReadPixels(0, 0, UserConfigParams::m_width, UserConfigParams::m_height,
                  GL_RGB, GL_UNSIGNED_BYTE, img.mutable_data());
 
