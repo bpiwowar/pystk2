@@ -223,7 +223,7 @@ struct PyPowerup {
 	void update(const Powerup * p) {
 		if (p) {
 			type = (Type)p->getType();
-			num = stk_config->ticks2Time(p->getNum());
+			num = p->getNum();
 		} else {
 			type = NOTHING;
 			num = 0;
