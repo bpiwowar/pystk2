@@ -256,6 +256,7 @@ struct PyKart {
 	static void define();
 	int id = 0, player_id = -1;
 	std::string name;
+	std::string kart_type;
 	py::array_t<float> location = py_tensor(3);
 	py::array_t<float> rotation = py_tensor(4);
 	py::array_t<float> front = py_tensor(3);
@@ -292,6 +293,7 @@ struct PyKart {
 		  R(id, "Kart id compatible with instance labels")
 		  R(player_id, "Player id")
 		  R(name, "Player name")
+		  R(kart_type, "Kart model identifier (matches list_karts())")
 		  R(location, "3D world location of the kart")
 		  R(rotation, "Quaternion rotation of the kart [w, x, y, z]")
 		  R(front, "Front direction of kart 1/2 kart length forward from location")
@@ -334,6 +336,7 @@ struct PyKart {
 			id = k->getWorldKartId();
 			speed = k->getSpeed();
 			name = k->getKartProperties()->getNonTranslatedName();
+			kart_type = k->getIdent();
 			setVector(location, k->getXYZ());
 
 			// Sets the proper rotation so we can convert to the kart frame of reference
@@ -773,6 +776,7 @@ void pickle(std::ostream & s, const PyKart & o) {
     pickle(s, o.id);
     pickle(s, o.player_id);
     pickle(s, o.name);
+    pickle(s, o.kart_type);
     ::pickle(s, o.location);
     ::pickle(s, o.rotation);
     ::pickle(s, o.front);
@@ -803,6 +807,7 @@ void unpickle(std::istream & s, PyKart * o) {
     unpickle(s, &o->id);
     unpickle(s, &o->player_id);
     unpickle(s, &o->name);
+    unpickle(s, &o->kart_type);
     unpickle(s, &o->location);
     unpickle(s, &o->rotation);
     unpickle(s, &o->front);
