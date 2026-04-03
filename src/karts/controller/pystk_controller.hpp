@@ -21,7 +21,7 @@ public:
 
     // Just do nothing!
     virtual void reset() OVERRIDE;
-    virtual void update (int ticks) OVERRIDE {}
+    virtual void update (int ticks) OVERRIDE;
     virtual bool disableSlipstreamBonus() const OVERRIDE { return true; }
     virtual void crashed(const Material *m) OVERRIDE {}
     virtual void crashed(const AbstractKart *k) OVERRIDE {}

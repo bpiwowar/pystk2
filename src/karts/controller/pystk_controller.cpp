@@ -1,5 +1,6 @@
 #include <iostream>
 #include "karts/abstract_kart.hpp"
+#include "karts/rescue_animation.hpp"
 #include "modes/world.hpp"
 #include "pystk_controller.hpp"
 
@@ -25,7 +26,17 @@ bool PySTKController::action(PlayerAction action, int value, bool dry_run)
     return true;
 }
 
-void PySTKController::reset() 
+void PySTKController::update(int ticks)
+{
+    // Accept rescue request if no animation is already playing
+    if (m_controls->getRescue() && !m_kart->getKartAnimation())
+    {
+        RescueAnimation::create(m_kart);
+        m_controls->setRescue(false);
+    }
+}
+
+void PySTKController::reset()
 {
 
 }
