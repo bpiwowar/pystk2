@@ -86,7 +86,7 @@ if not DOWNLOADED_FILE.is_file():
             tf_path = Path(tf_info.name)
             parents = list(tf_path.parents)
             if len(parents) > 2 and parents[-3].name == "data":
-                tf_info.name = tf_path.relative_to(parents[-3])
+                tf_info.name = str(tf_path.relative_to(parents[-3]))
                 tf.extract(tf_info, str(ASSETS_DIR / "data"))
 
     sys.stderr.write("Cleaning up")
