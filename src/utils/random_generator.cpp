@@ -23,12 +23,12 @@
 unsigned int RandomGenerator::m_random_value = RandomGenerator::default_seed;
 
 std::mt19937& RandomGenerator::getGenerator() {
-   static thread_local std::mt19937 generator = [] {
-      if (m_random_value == default_seed)
-         return std::mt19937{std::random_device{}()};
-      else
-         return std::mt19937{m_random_value};
-   }();
+   static thread_local std::mt19937 generator{std::random_device{}()};
+   static thread_local unsigned int seeded_value = default_seed;
+   if (seeded_value != m_random_value) {
+      seeded_value = m_random_value;
+      generator.seed(m_random_value);
+   }
    return generator;
 }
 

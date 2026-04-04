@@ -45,6 +45,7 @@
 #include <IEventReceiver.h>
 
 #include "pystk.hpp"
+#include "utils/random_generator.hpp"
 #include "main_loop.hpp"
 #include "achievements/achievements_manager.hpp"
 #include "audio/music_manager.hpp"
@@ -408,6 +409,8 @@ void PySTKRace::restart() {
     if (World::getWorld())
     {
         World::getWorld()->reset(true /* restart */);
+        srand(config_.seed);
+        RandomGenerator::seed(config_.seed);
         ItemManager::updateRandomSeed(config_.seed);
         powerup_manager->setRandomSeed(config_.seed);
     }
@@ -518,6 +521,8 @@ void PySTKRace::start() {
         kart->setOnScreenText(kart_name);
     }
 
+    srand(config_.seed);
+    RandomGenerator::seed(config_.seed);
     ItemManager::updateRandomSeed(config_.seed);
     powerup_manager->setRandomSeed(config_.seed);
 }
