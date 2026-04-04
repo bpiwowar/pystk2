@@ -23,7 +23,7 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
-          submodules: false
+          submodules: true
       - name: Set up environment for windows-2022
         shell : bash
         if: ${{ matrix.os == 'windows-2022' }}

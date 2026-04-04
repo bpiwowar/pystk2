@@ -101,7 +101,7 @@ ASSETS_DIR = str(ASSETS_DIR)
     } 
 }
 
-PYBIND11_MODULE(pystk2, m) {
+PYBIND11_MODULE(pystk2, m, py::mod_gil_not_used()) {
     m.doc() = "Python SuperTuxKart interface";
     m.attr("__version__") = std::string(STK_VERSION);
 #ifdef SERVER_ONLY
